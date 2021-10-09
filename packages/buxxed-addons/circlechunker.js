@@ -44,7 +44,7 @@ OWOP.tool.addToolObject(new OWOP.tool.class('BuXXeD Bot Circle Chunker 16', OWOP
                 });
             }));
 
-            OWOP.tool.addToolObject(new OWOP.tool.class('addons/BotCircleChunker32.js', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(32), false, function(tool) {
+            OWOP.tool.addToolObject(new OWOP.tool.class('BuXXeD Bot Circle Chunker 32', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(32), false, function(tool) {
                 let pix = 32;
                 let index = 0;
                 tool.setEvent('mousemove mousedown', async mouse => {
@@ -89,7 +89,7 @@ OWOP.tool.addToolObject(new OWOP.tool.class('BuXXeD Bot Circle Chunker 16', OWOP
                     }
                 });
             }));
-            OWOP.tool.addToolObject(new OWOP.tool.class('addons/BotCircleChunker64.js', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(64), false, function(tool) {
+            OWOP.tool.addToolObject(new OWOP.tool.class('BuXXeD Bot Circle Chunker 64', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(64), false, function(tool) {
                 let pix = 64;
                 let index = 0;
                 tool.setEvent('mousemove mousedown', async mouse => {
@@ -134,7 +134,7 @@ OWOP.tool.addToolObject(new OWOP.tool.class('BuXXeD Bot Circle Chunker 16', OWOP
                     }
                 });
             }));
-OWOP.tool.addToolObject(new OWOP.tool.class('addons/BotCircleChunker8.js', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(8), false, function(tool) {
+OWOP.tool.addToolObject(new OWOP.tool.class('BuXXeD Bot Circle Chunker 8', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(8), false, function(tool) {
                 let pix = 8;
                 let index = 0;
                 tool.setEvent('mousemove mousedown', async mouse => {

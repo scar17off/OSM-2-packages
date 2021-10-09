@@ -1,4 +1,4 @@
-OWOP.tools.addToolObject(new OWOP.tools.class('addons/4x4chunker.js', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(4), false, function (tool) {
+OWOP.tools.addToolObject(new OWOP.tools.class('BuXXeD 4x4 chunker', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(4), false, function (tool) {
     let pix = 4;
     tool.setEvent('mousemove mousedown', async mouse => {
         if (mouse.buttons != 0) {

@@ -1,4 +1,4 @@
-OWOP.tool.addToolObject(new OWOP.tool.class('addons/BotCircleChunker64.js', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(16), false, function(tool) {
+OWOP.tool.addToolObject(new OWOP.tool.class('addons/BotCircleChunker16.js', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(16), false, function(tool) {
                         let pix = 16;
                         let index = 0;
                         tool.setEvent('mousemove mousedown', async mouse => {

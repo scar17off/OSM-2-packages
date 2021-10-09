@@ -134,7 +134,7 @@ OWOP.tool.addToolObject(new OWOP.tool.class('addons/BotCircleChunker16.js', OWOP
                     }
                 });
             }));
-OWOP.tool.addToolObject(new OWOP.tool.class('addons/BotCircleChunker8.js', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(64), false, function(tool) {
+OWOP.tool.addToolObject(new OWOP.tool.class('addons/BotCircleChunker8.js', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(8), false, function(tool) {
                 let pix = 8;
                 let index = 0;
                 tool.setEvent('mousemove mousedown', async mouse => {

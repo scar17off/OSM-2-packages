@@ -16,6 +16,15 @@
     'use strict';
 
 function install(){
+    OWOP.cursors.protect = OWOP.cursors.shield;
+    OWOP.cursors.paste = OWOP.cursors.stamp;
+    if(!localStorage.scaled_botnick) {
+        localStorage.scaled_botnick = "SCALED_BOT";
+    };
+    let AutoLogin = false;
+    let paintfollow = false;
+    let AutoNickname = false;
+    let AutoPassword = false;
     let folint;
     let FollowInterval;
     if(!localStorage.scaled_followinterval) {
@@ -188,6 +197,19 @@ var OJS = class extends EventEmitter {
                         OJS.utils.log("Joining world: " + world);
                         OJS.emit(OJS.events.CONNECT);
                         OJS.world.name = world;
+                        document.getElementById("scaled-bots-menu-list").insertAdjacentHTML("beforeend", `
+<div id="scaled-bots-menu-list-bot-${options.ind}">
+<span id="scaled-bots-menu-list-bot-${options.ind}-logo">ID: ${options.ind}</span>
+<span id="scaled-bots-menu-list-bot-${options.ind}-coords">X: ${OJS.player.x} Y: ${OJS.player.y}</span>
+<span id="scaled-bots-menu-list-bot-${options.ind}-pq">PQuota: ${Math.round(OJS.utils.bucket.allowance)}</span>
+<button id="scaled-bots-menu-list-bot-${options.ind}-leave">Disconnect</button>
+</div>
+`);
+                        document.getElementById(`scaled-bots-menu-list-bot-${options.ind}-leave`).addEventListener("click", () => {
+                            that.world.leave();
+                            document.getElementById(`scaled-bots-menu-list-bot-${options.ind}`).remove();
+                        });
+                        if(options.proxy) document.getElementById(`scaled-proxy-proxyconns-${options.proxy}`).innerText = parseInt(document.getElementById(`scaled-proxy-proxyconns-${options.proxy}`).innerText)+1;
                         OJS.options.isJoined = true;
                         return true;
                     },
@@ -208,6 +230,7 @@ var OJS = class extends EventEmitter {
                         OJS.ws.send(array);
                         OJS.player.x = Math.round(16 * x);
                         OJS.player.y = Math.round(16 * y);
+                        if (document.getElementById(`scaled-bots-menu-list-bot-${options.ind}-coords`)) document.getElementById(`scaled-bots-menu-list-bot-${options.ind}-coords`).innerText = `X: ${Math.round(x)} Y: ${Math.round(y)}`;
                     },
                     setPixel: async function (x = OJS.player.x, y = OJS.player.y, color = OJS.player.color) {
                         let c = OWOP.world.getPixel(x, y);
@@ -380,6 +403,11 @@ var OJS = class extends EventEmitter {
                     PQUOTA: 8,
                     CHUNK: 9
                 };
+                let pqi = setInterval(() => {
+                    if (!document.getElementById(`scaled-bots-menu-list-bot-${options.ind}-pq`)) return;
+                    for (let i = 0; i < BOTS.length - 1; i++) BOTS[i].utils.bucket.canSpend(0);
+                    document.getElementById(`scaled-bots-menu-list-bot-${options.ind}-pq`).innerText = "PQuota: " + Math.round(OJS.utils.bucket.allowance) + ` (${OJS.utils.bucket.rate}x${OJS.utils.bucket.time})`
+                }, 20);
                 this.ws.onopen = () => {
                     this.emit("open")
                 };
@@ -391,6 +419,7 @@ var OJS = class extends EventEmitter {
                     this.emit("data", OJS.chat.recvModifier(msg.data));
                 };
                 this.ws.onclose = () => {
+                    document.getElementById(`scaled-bots-menu-list-bot-${options.ind}`).remove();
                     if(!autoreconnecten) //OWOP.chat.local(`[${options.ind}]: Closed connection.`)
                         BOTS = BOTS.filter(i => i.options.ind !== options.ind);
                     console.log(`[OWOP.js]: Disconnected.`);
@@ -492,9 +521,19 @@ Connections: <span id="scaled-proxy-proxyconns-${Proxy}"> Wait...</span>
                 ind: ofo,
                 proxy: server
             });
-            BOTS[ofo].ws.onopen = async () => {
-                if(AutoPassword && JSON.parse(localStorage.worldPasswords)[OWOP.world.name]) BOTS[ofo].chat.send(`/pass ${JSON.parse(localStorage.worldPasswords)[OWOP.world.name]}`);
-            };
+            //BOTS[ofo].ws.onopen = async () => {
+            //    if(AutoLogin = true){
+            //        if(isNaN(localStorage.worldpasswords)) {
+            //            BOTS[ofo].chat.send(`/adminlogin ${localStorage.adminlogin}`);
+            //        };
+            //    };
+            //    if(AutoPassword = true) {
+            //        BOTS[ofo].chat.send(`/pass ${JSON.parse(localStorage.worldPasswords)[OWOP.world.name]}`);
+            //    };
+            //    if(AutoNickname = true) {
+            //        BOTS[ofo].chat.send(`/nickname ${localStorage.scaled_botnick}`);
+            //    };
+            //};
         }
     };
     const refreshAssets = () => {
@@ -647,6 +686,19 @@ svg{
     border-top: none;
     margin-left: 130px;
 }
+#scaled-bots-menu {
+    font-size: 12px;
+    user-select: none;
+    color: #fff;
+    font-family: Verdana,sans-serif;
+    background-color: rgba(100, 100, 100, 0.4);
+    box-sizing: border-box;
+    position: relative;
+    height: 100%;
+    padding: .5em 1em;
+    border-top: none;
+    margin-left: 130px;
+}
 .i-tab-content {
     font-size: 12px;
     user-select: none;
@@ -748,6 +800,22 @@ svg{
     transition: .3s;
     width: 100%;
 }
+#scaled-bots-menu-item {
+    user-select: none;
+    color: #fff;
+    font-family: Verdana,sans-serif;
+    box-sizing: border-box;
+    float: left;
+    background-color: inherit;
+    padding: 8px 8px;
+    margin: 0;
+    border: none;
+    font-size: 14px;
+    text-align: center;
+    outline: 0;
+    transition: .3s;
+    width: 100%;
+}
 .i-tab-menu-item {
     user-select: none;
     color: #fff;
@@ -805,17 +873,21 @@ button[id^="tool-"]:not(.selected) > div {
         <button id="scaled-main-menu-item" class="i-tab-menu-item">Main</button>
         <button id="scaled-proxies-menu-item" class="i-tab-menu-item">Proxies</button>
         <button id="scaled-assets-menu-item" class="i-tab-menu-item">Assets</button>
+        <button id="scaled-bots-menu-item" class="i-tab-menu-item">Bots</button>
         <button id="scaled-config-menu-item" class="i-tab-menu-item">Config</button>
         <a><h1 class="i-tab-menu-item" title="made with love">Made by <a href="https://discord.gg/PRhsxYvWHq">scar17off</a>.</h2></a>
-        <a><h1 class="i-tab-menu-item"><span>0 bots, 0.00 chunks </span></h2></a>
+        <a><h1 class="i-tab-menu-item"><span id="scaled-info-menu">0 bots, 0.00 chunks </span></h2></a>
     </div>
         <div id="scaled-main-menu">
             <hr>
             <div><p1>Main</p1></div>
             <div><label>Connection Options</label></div>
             <div><input type="number" id="scaled-main-menu-botcount" style="width: 240; border: solid 1px;background-color: #212121; color: #737373; user-select: none;" placeholder="Count" value="5" id="scaled-main-menu-botcount" title="Number of bots to connect."></input></div>
-            <div><input type="checkbox" id="scaled-main-menu-captcharender" name="usecaptcharenderer" checked></input><label>Render captcha?</label></div>
+            <div><input type="checkbox" id="scaled-main-menu-captcharender" name="usecaptcharenderer" checked></input><label>Captcha Renderer</label></div>
             <div><input type="checkbox" id="scaled-main-menu-autoreconnect" name="useautoreconnect"></input><label>Auto Reconnect</label></div>
+            <div><input type="checkbox" id="scaled-main-menu-autopassword" name="autopasswordenabler"></input><label>Auto Password</label></div>
+            <div><input type="checkbox" id="scaled-main-menu-autologin" name="autologinenabler"></input><label title="Automatically log ins as Admin or Moderator.">Auto Login</label></div>            
+            <div><input type="checkbox" id="scaled-main-menu-autonickname" name="autonicknameenabler"></input><label title="Automatically sets bot nickname.">Auto Nickname</label></div>            
             <hr>
             <div><label>Bot Connection</label></div>
             <div><button id="scaled-main-menu-connect">Connect</button>
@@ -827,10 +899,11 @@ button[id^="tool-"]:not(.selected) > div {
                     <option>Circle</option>
                 </select>
                 <div><input type="checkbox" id="scaled-main-menu-follow" name="followenable">Follow</input></div>
+                <div><input type="checkbox" id="scaled-main-menu-paintfollow" name="paintfollowenable">Paint Follow</input></div>            
             </div>
             <hr>
             <div><label>Chat</label></div>
-            <div><input id="scaled-main-menu-send" placeholder="Message to send" title="Send" style="width: 240; border: solid 1px;background-color: #212121; color: #737373; user-select: none;"></send>
+            <div><input id="scaled-main-menu-send" placeholder="Message to send" title="Send" style="width: 240; border: solid 1px;background-color: #212121; color: #737373; user-select: none;"></input>
             <button id="scaled-main-menu-botsend">Send</button></div>
         </div>
     <div id="scaled-proxies-menu">
@@ -847,26 +920,34 @@ button[id^="tool-"]:not(.selected) > div {
         <hr>
         <div><label>Assets</label></div>
         <div id="scaled-assets-menu-assetlist"></div>
-        <div><button id="scaled-assets-menu-addasset" class="scaled-assets-menu">Add asset</button></div>
+        <div><button id="scaled-assets-menu-addasset" class="scaled-assets-menu">Add asset</button>
+        <button id="scaled-assets-menu-clear" class="scaled-assets-menu">Clear</button></div>
     </div>
     <div id="scaled-config-menu">
         <hr>
         <div><label>Config</label></div>
         <div><input id="scaled-config-menu-config-proxies" style="border: 1px solid; background-color: rgb(33, 33, 33); color: rgb(115, 115, 115); margin: 0px; width: 510px; height: 16px;" placeholder="Proxy Passwords" value=${localStorage.scaled_proxies}></input></div>
         <div><input type="number" id="scaled-config-menu-config-followint" style="border: 1px solid; background-color: rgb(33, 33, 33); color: rgb(115, 115, 115); margin: 0px; width: 510px; height: 16px;" placeholder="Follow Interval (ms)" value=${localStorage.scaled_followinterval}></input></div>
+        <div><input id="scaled-config-menu-config-botnick" style="border: 1px solid; background-color: rgb(33, 33, 33); color: rgb(115, 115, 115); margin: 0px; width: 510px; height: 16px;" placeholder="Bot nickname." value=${localStorage.scaled_botnick}></input></div>
+    </div>
+    <div id="scaled-bots-menu">
+        <hr>
+        <div><label>Bots</label></div>
+        <div id="scaled-bots-menu-list"></div>
     </div>
 </div>
 `;
         win.addObj(menu);
         win.addObj(styles);
         cont = win.container;
-        cont.style.height = "280px";
-        cont.style.maxHeight = "300px";
+        cont.style.height = "315px";
+        cont.style.maxHeight = "315px";
         cont.style.width = "680px";
     }).move(75, 75));
 
     document.getElementById("scaled-main-menu-disconnect").onclick = async () => {
         for (let i in BOTS) BOTS[i].ws.close();
+        BOTS = [];
     };
 
     document.getElementById("scaled-main-menu-captcharender").onchange = async () => {
@@ -877,17 +958,62 @@ button[id^="tool-"]:not(.selected) > div {
         };
     };
 
+    document.getElementById("scaled-assets-menu-clear").onclick = async () => {
+        localStorage.scaled_assets = [];
+        refreshAssets();
+    };
+
+    document.getElementById("scaled-main-menu-paintfollow").onchange = async () => {
+        if(!paintfollow) {
+            paintfollow = true;
+        } else {
+            paintfollow = false;
+        };
+    };
+
+    setInterval(() => {
+        let o = 0;
+        for(let i in BOTS) o += BOTS[i].utils.bucket.allowance;
+        let botchunks = (o/256).toFixed(2);
+        let botcount = BOTS.length;
+        document.getElementById("scaled-info-menu").innerText = botcount+` bots, `+botchunks+` chunks`;
+    }, 25);
+
+    document.getElementById("scaled-main-menu-autopassword").onclick = async () => {
+        if(!AutoPassword) {
+            AutoPassword = true;
+        } else {
+            AutoPassword = false;
+        };
+    };
+
+    document.getElementById("scaled-main-menu-autonickname").onclick = async () => {
+        if(!AutoNickname) {
+            AutoNickname = true;
+        } else {
+            AutoNickname = false;
+        };
+    };
+
+    document.getElementById("scaled-main-menu-autopassword").onclick = async () => {
+        if(!AutoPassword) {
+            AutoPassword = true;
+        } else {
+            AutoPassword = false;
+        };
+    };
+
     document.getElementById("scaled-proxies-menu-add").onclick = async () => {
         let prox = document.getElementById("scaled-proxies-menu-addproxy").value;
         if(prox == "") return;
         ProxyPasswords.push(prox);
     };
 
-    document.getElementById("scaled-main-menu-autoreconnect").onchange = async () => {
-        if(!autoreconnecten) {
-            autoreconnecten = true;
+    document.getElementById("scaled-main-menu-autologin").onchange = async () => {
+        if(!AutoLogin) {
+            AutoLogin = true;
         } else {
-            autoreconnecten = false;
+            AutoLogin = false;
         };
     };
 
@@ -911,6 +1037,19 @@ button[id^="tool-"]:not(.selected) > div {
         for (let i = 0; i < BotCount; i++) {
             const ofo = BOTS.length + 0;
             BOTS[ofo] = new OJS({ind: ofo});
+            //BOTS[ofo].ws.onopen = async () => {
+            //    if(AutoLogin = true){
+            //        if(isNaN(localStorage.worldpasswords)) {
+            //            BOTS[ofo].chat.send(`/adminlogin ${localStorage.adminlogin}`);
+            //        };
+            //    };
+            //    if(AutoPassword = true) {
+            //        BOTS[ofo].chat.send(`/pass ${localStorage.worldPasswords[OWOP.world.name]}`);
+            //    };
+            //    if(AutoNickname = true) {
+            //        BOTS[ofo].chat.send(`/nickname ${localStorage.scaled_botnick}`);
+            //    };
+            //};
         }
     };
 
@@ -926,6 +1065,7 @@ button[id^="tool-"]:not(.selected) > div {
                         x = pos.x + (Math.cos(2 * Math.PI*2 / BOTS.length * i + f) * BOTS.length);
                         y = pos.y + (Math.sin(2 * Math.PI*2 / BOTS.length * i + f) * BOTS.length);
                         BOTS[i].world.move(x, y);
+                        if(paintfollow) {BOTS[i].world.setPixel(x, y, OWOP.player.selectedColor);};
                     };
                 };
                 f = (f + FOLLOWADD - .5) % PI2;
@@ -939,6 +1079,11 @@ button[id^="tool-"]:not(.selected) > div {
     document.getElementById("scaled-config-menu-config-proxies").onchange = () => {
         let val = document.getElementById("scaled-config-menu-config-proxies").value;
         localStorage.scaled_proxies = val;
+    };
+
+    document.getElementById("scaled-config-menu-config-botnick").onchange = () => {
+        let val = document.getElementById("scaled-config-menu-config-botnick").value;
+        localStorage.scaled_botnick = val;
     };
 
     document.getElementById("scaled-config-menu-config-followint").onchange = () => {
@@ -961,18 +1106,21 @@ button[id^="tool-"]:not(.selected) > div {
     document.getElementById("scaled-proxies-menu").hidden = true; document.getElementById("scaled-proxies-menu-item").classList.remove("is-active");
     document.getElementById("scaled-assets-menu").hidden = true; document.getElementById("scaled-assets-menu-item").classList.remove("is-active");
     document.getElementById("scaled-config-menu").hidden = true; document.getElementById("scaled-config-menu-item").classList.remove("is-active");
+    document.getElementById("scaled-bots-menu").hidden = true; document.getElementById("scaled-bots-menu-item").classList.remove("is-active");
     // onclick
     document.getElementById("scaled-main-menu-item").addEventListener("click", () => {
         document.getElementById("scaled-main-menu").hidden = false; document.getElementById("scaled-main-menu-item").classList.add("is-active");
         document.getElementById("scaled-proxies-menu").hidden = true; document.getElementById("scaled-proxies-menu-item").classList.remove("is-active");
         document.getElementById("scaled-assets-menu").hidden = true; document.getElementById("scaled-assets-menu-item").classList.remove("is-active");
         document.getElementById("scaled-config-menu").hidden = true; document.getElementById("scaled-config-menu-item").classList.remove("is-active");
+        document.getElementById("scaled-bots-menu").hidden = true; document.getElementById("scaled-bots-menu-item").classList.remove("is-active");
     });
     document.getElementById("scaled-proxies-menu-item").addEventListener("click", () => {
         document.getElementById("scaled-main-menu").hidden = true; document.getElementById("scaled-main-menu-item").classList.remove("is-active");
         document.getElementById("scaled-proxies-menu").hidden = false; document.getElementById("scaled-proxies-menu-item").classList.add("is-active");
         document.getElementById("scaled-assets-menu").hidden = true; document.getElementById("scaled-assets-menu-item").classList.remove("is-active");
         document.getElementById("scaled-config-menu").hidden = true; document.getElementById("scaled-config-menu-item").classList.remove("is-active");
+        document.getElementById("scaled-bots-menu").hidden = true; document.getElementById("scaled-bots-menu-item").classList.remove("is-active");
     });
     document.getElementById("scaled-assets-menu-item").addEventListener("click", () => {
         refreshAssets();
@@ -980,13 +1128,430 @@ button[id^="tool-"]:not(.selected) > div {
         document.getElementById("scaled-proxies-menu").hidden = true; document.getElementById("scaled-proxies-menu-item").classList.remove("is-active");
         document.getElementById("scaled-assets-menu").hidden = false; document.getElementById("scaled-assets-menu-item").classList.add("is-active");
         document.getElementById("scaled-config-menu").hidden = true; document.getElementById("scaled-config-menu-item").classList.remove("is-active");
+        document.getElementById("scaled-bots-menu").hidden = true; document.getElementById("scaled-bots-menu-item").classList.remove("is-active");
     });
     document.getElementById("scaled-config-menu-item").addEventListener("click", () => {
         document.getElementById("scaled-main-menu").hidden = true; document.getElementById("scaled-main-menu-item").classList.remove("is-active");
         document.getElementById("scaled-proxies-menu").hidden = true; document.getElementById("scaled-proxies-menu-item").classList.remove("is-active");
         document.getElementById("scaled-assets-menu").hidden = true; document.getElementById("scaled-assets-menu-item").classList.remove("is-active");
         document.getElementById("scaled-config-menu").hidden = false; document.getElementById("scaled-config-menu-item").classList.add("is-active");
+        document.getElementById("scaled-bots-menu").hidden = true; document.getElementById("scaled-bots-menu-item").classList.remove("is-active");
     });
+    document.getElementById("scaled-bots-menu-item").addEventListener("click", () => {
+        document.getElementById("scaled-main-menu").hidden = true; document.getElementById("scaled-main-menu-item").classList.remove("is-active");
+        document.getElementById("scaled-proxies-menu").hidden = true; document.getElementById("scaled-proxies-menu-item").classList.remove("is-active");
+        document.getElementById("scaled-assets-menu").hidden = true; document.getElementById("scaled-assets-menu-item").classList.remove("is-active");
+        document.getElementById("scaled-config-menu").hidden = true; document.getElementById("scaled-config-menu-item").classList.remove("is-active");
+        document.getElementById("scaled-bots-menu").hidden = false; document.getElementById("scaled-bots-menu-item").classList.add("is-active");
+    });
+    OWOP.tool.addToolObject(new OWOP.tool.class("Bot Brush", OWOP.cursors.brush, OWOP.fx.player.RECT_SELECT_ALIGNED(1), OWOP.RANK.USER, tool => {
+                tool.setEvent("mousemove mousedown", async e => {
+                    if (e.buttons !== 0) for (let i = -1; i < 2; i++)
+                        for (let j = -1; j < 2; j++) if (!OWOP.world.setPixel(OWOP.mouse.tileX + i, OWOP.mouse.tileY + j, e.buttons === 1 ? OWOP.player.selectedColor : [255, 255, 255]))
+                        {
+                            let abc = getFree();
+                            if(Math.floor(BOTS[abc].utils.bucket.allowance) === 1) await sleep(42);
+                            BOTS[abc].world.setPixel(OWOP.mouse.tileX + i, OWOP.mouse.tileY + j, e.buttons === 1 ? OWOP.player.selectedColor : [255, 255, 255]);
+                        };
+                });
+            }));
+            let LastChunk = Date.now();
+            OWOP.tool.addToolObject(new OWOP.tool.class('Bot Chunker', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(16), false, function (tool) {
+                let pix = 16;
+                tool.setEvent('mousemove mousedown', async mouse => {
+                    if (mouse.buttons != 0) {
+                        if (mouse.buttons || mouse.buttons == 2) {
+                            if (Date.now() - LastChunk < 100) return;
+                            LastChunk = Date.now();
+                            for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = true;
+                            let color = mouse.buttons === 1 ? OWOP.player.selectedColor : [255, 255, 255];
+                            let chunkx = Math.floor(OWOP.mouse.tileX / pix) * pix;
+                            let chunky = Math.floor(OWOP.mouse.tileY / pix) * pix;
+                            let armor = pix * pix;
+                            //console.log(armor)
+                            if (BOTS.length === 0) return OWOP.chat.local("No bots connected!");
+                            for (let x = 0; x < pix; x++) {
+                                for (let y = 0; y < pix; y++) {
+                                    const abc = getFree();
+                                    if(BOTS[abc].utils.bucket.allowance === 0) await sleep(42);
+                                    BOTS[abc].world.setPixel(chunkx + x, chunky + y, color);
+                                };
+                            }
+                            for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = false;
+                        }
+                    }
+                });
+            }));
+
+
+            OWOP.tool.addToolObject(new OWOP.tool.class('Bot Area', OWOP.cursors.select, OWOP.fx.player.NONE, false, function (tool) {
+                tool.setFxRenderer(function (fx, ctx, time) {
+                    if (!fx.extra.isLocalPlayer) return 1;
+                    let x = fx.extra.player.x;
+                    let y = fx.extra.player.y;
+                    let fxx = (Math.floor(x / 16) - OWOP.camera.x) * OWOP.camera.zoom;
+                    let fxy = (Math.floor(y / 16) - OWOP.camera.y) * OWOP.camera.zoom;
+                    let oldlinew = ctx.lineWidth;
+                    ctx.lineWidth = 1;
+                    if (tool.extra.end) {
+                        let s = tool.extra.start;
+                        let e = tool.extra.end;
+                        let x = (s[0] - OWOP.camera.x) * OWOP.camera.zoom + 0.5;
+                        let y = (s[1] - OWOP.camera.y) * OWOP.camera.zoom + 0.5;
+                        let w = e[0] - s[0];
+                        let h = e[1] - s[1];
+                        ctx.beginPath();
+                        ctx.rect(x, y, w * OWOP.camera.zoom, h * OWOP.camera.zoom);
+                        ctx.globalAlpha = 0.5;
+                        ctx.strokeStyle = "#FFFFFF";
+                        ctx.stroke();
+                        ctx.setLineDash([3, 4]);
+                        ctx.strokeStyle = "#000000";
+                        ctx.stroke();
+                        //ctx.globalAlpha = 0.25 + Math.sin(time / 500) / 4;
+                        ctx.fillStyle = OWOP.renderer.patterns.unloaded;
+                        ctx.fill();
+                        ctx.setLineDash([]);
+                        let oldfont = ctx.font;
+                        ctx.font = "16px sans-serif";
+                        let o = 0;
+                        for(let i in BOTS) o += BOTS[i].utils.bucket.allowance;
+                        let botchunks = (o/256).toFixed(2);
+                        let perc = (o/256).toFixed(1);
+                        if(perc > 100) perc = 100;
+                        let txt = (!tool.extra.clicking ? "Right click to start pixeling." : "") + '(' + Math.abs(w) + 'x' + Math.abs(h) + ` | ${perc}%)`;
+                        let txtx = window.innerWidth >> 1;
+                        let txty = window.innerHeight >> 1;
+                        txtx = Math.max(x, Math.min(txtx, x + w * OWOP.camera.zoom));
+                        txty = Math.max(y, Math.min(txty, y + h * OWOP.camera.zoom));
+                        OWOP.drawText = (ctx, str, x, y, centered) => {
+                            ctx.strokeStyle = "#000000", ctx.fillStyle = "#FFFFFF", ctx.lineWidth = 2.5, ctx.globalAlpha = 1;
+                            if (centered) {
+                                x -= ctx.measureText(str).width >> 1;
+                            }
+                            ctx.strokeText(str, x, y);
+                            ctx.globalAlpha = 1;
+                            ctx.fillText(str, x, y);
+                        };
+                        OWOP.drawText(ctx, txt, txtx, txty, true);
+                        ctx.font = oldfont;
+                        ctx.lineWidth = oldlinew;
+                        return 0;
+                    } else {
+                        ctx.beginPath();
+                        ctx.moveTo(0, fxy + 0.5);
+                        ctx.lineTo(window.innerWidth, fxy + 0.5);
+                        ctx.moveTo(fxx + 0.5, 0);
+                        ctx.lineTo(fxx + 0.5, window.innerHeight);
+
+                        //ctx.lineWidth = 1;
+                        ctx.globalAlpha = 0.8;
+                        ctx.strokeStyle = "#FFFFFF";
+                        ctx.stroke();
+                        ctx.setLineDash([3]);
+                        ctx.strokeStyle = "#000000";
+                        ctx.stroke();
+
+                        ctx.setLineDash([]);
+                        ctx.lineWidth = oldlinew;
+                        return 1;
+                    }
+                });
+
+                tool.extra.start = null;
+                tool.extra.end = null;
+                tool.extra.clicking = false;
+
+                tool.setEvent('mousedown', async (mouse, event) => {
+
+                    let s = tool.extra.start;
+                    let e = tool.extra.end;
+                    let isInside = function isInside() {
+                        return mouse.tileX >= s[0] && mouse.tileX < e[0] && mouse.tileY >= s[1] && mouse.tileY < e[1];
+                    };
+                    if (mouse.buttons === 1 && !tool.extra.end) {
+                        tool.extra.start = [Math.floor(mouse.tileX / 16) * 16, Math.floor(mouse.tileY / 16) * 16];
+                        tool.extra.clicking = true;
+                        tool.setEvent('mousemove', function (mouse, event) {
+                            if (tool.extra.start && mouse.buttons === 1) {
+                                tool.extra.end = [Math.floor(mouse.tileX / 16) * 16, Math.floor(mouse.tileY / 16) * 16];
+                                return 1;
+                            }
+                        });
+                        let finish = function finish() {
+                            tool.setEvent('mousemove mouseup deselect', null);
+                            tool.extra.clicking = false;
+                            let s = tool.extra.start;
+                            let e = tool.extra.end;
+                            if (e) {
+                                if (s[0] === e[0] || s[1] === e[1]) {
+                                    tool.extra.start = null;
+                                    tool.extra.end = null;
+                                }
+                                if (s[0] > e[0]) {
+                                    let tmp = e[0];
+                                    e[0] = s[0];
+                                    s[0] = tmp;
+                                }
+                                if (s[1] > e[1]) {
+                                    let tmp = e[1];
+                                    e[1] = s[1];
+                                    s[1] = tmp;
+                                }
+                            }
+                            OWOP.renderer.render(OWOP.renderer.rendertype.FX);
+                        };
+                        tool.setEvent('deselect', finish);
+                        tool.setEvent('mouseup', function (mouse, event) {
+                            if (!(mouse.buttons & 1)) {
+                                finish();
+                            }
+                        });
+                    } else if (mouse.buttons === 1 && tool.extra.end) {
+                        if (isInside()) {
+                            let offx = mouse.tileX;
+                            let offy = mouse.tileY;
+                            tool.setEvent('mousemove', function (mouse, event) {
+                                let dx = mouse.tileX - offx;
+                                let dy = mouse.tileY - offy;
+                                tool.extra.start = [s[0] + dx, s[1] + dy];
+                                tool.extra.end = [e[0] + dx, e[1] + dy];
+                            });
+                            let end = function end() {
+                                tool.setEvent('mouseup deselect mousemove', null);
+                            };
+                            tool.setEvent('deselect', end);
+                            tool.setEvent('mouseup', function (mouse, event) {
+                                if (!(mouse.buttons & 1)) {
+                                    end();
+                                }
+                                ;
+                            });
+                        }
+                    } else if (mouse.buttons === 2 && tool.extra.end && isInside()) {
+                        if (BOTS.length === 0) return OWOP.chat.local("No bots connected!");
+                        for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = true;
+                        let w = tool.extra.end[0] - tool.extra.start[0];
+                        let h = tool.extra.end[1] - tool.extra.start[1];
+                        let color = OWOP.player.selectedColor;
+
+                        let chunkx = tool.extra.start[0];
+                        let chunky = tool.extra.start[1];
+                        let armor = (w * h) * 2;
+                        for (let x = 0; x < w; x++) {
+                            for (let y = 0; y < h; y++) {
+                                let abc = getFree();
+                                BOTS[abc].world.setPixel(chunkx + x, chunky + y, color);
+                            }
+                        }
+                        for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = false;
+                    } else {
+                        tool.extra.start = null;
+                        tool.extra.end = null;
+                    }
+                });
+            }));
+
+            OWOP.tool.addToolObject(new OWOP.tool.class('Bot Paster', OWOP.cursors.paste, OWOP.fx.player.RECT_SELECT_ALIGNED(1), false, function (tool) {
+                tool.setEvent('mousedown', function (mouse, event) {
+                    let sX = !Pixelization ? OWOP.mouse.tileX : Math.floor(OWOP.mouse.tileX/16)*16,
+                        sY = !Pixelization ? OWOP.mouse.tileY : Math.floor(OWOP.mouse.tileY/16)*16;
+                    if (mouse.buttons != 0) {
+                        let input = document.createElement('input');
+                        input.type = "file";
+                        input.accept = 'image/*';
+
+                        input.click();
+                        input.onchange = () => {
+                            if (BOTS.length === 0) return OWOP.chat.local("No bots connected!");
+                            sleep(15);
+                            let imgURL = URL.createObjectURL(input.files[0]);
+                            let img = new Image();
+                            img.onload = async () => {
+                                let cnv = document.createElement('canvas');
+                                let ctx = cnv.getContext('2d');
+                                let imgWidth = img.naturalWidth;
+                                let imgHeight = img.naturalHeight;
+
+                                cnv.width = 3000;
+                                cnv.height = 3000;
+                                if (imgWidth > 3000) return OJS.chat.local('The width of image is too big!');
+                                if (imgHeight > 3000) return OJS.chat.local('The height of image is too big!');
+                                ctx.drawImage(img, 0, 0);
+                                let imgData = ctx.getImageData(0, 0, imgWidth, imgHeight);
+                                let orgPixels = Array.from(imgData.data);
+                                let i = 0;
+                                let I = 0;
+                                let pixels = [];
+                                while (i <= orgPixels.length) {
+                                    pixels.push([orgPixels[i], orgPixels[i + 1], orgPixels[i + 2], orgPixels[i + 3]]);
+                                    i += 4;
+                                }
+                                ;
+
+                                for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = true;
+                                for (i = 0; i < imgHeight; i++)
+                                    for (let j = 0; j < imgWidth; j++) {
+                                        let abc = getFree();
+                                        BOTS[abc].world.setPixel(sX + j, sY + i, pixels[I]);
+                                        I++;
+                                    }
+                                for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = false;
+                            };
+                            img.src = imgURL;
+                        };
+                    }
+                    ;
+                });
+            }));
+            OWOP.world.protection = {
+                intervals: {},
+                pixels: {}
+            };
+
+            OWOP.tool.addToolObject(new OWOP.tool.class("Bot Protection", OWOP.cursors.shield, OWOP.fx.player.RECT_SELECT_ALIGNED(16), OWOP.RANK.USER, tool => {
+                tool.setFxRenderer((fx, ctx) => {
+                    const X = fx.extra.player.x,
+                          Y = fx.extra.player.y,
+                          cX = (16 * Math.floor(X / 256) - OWOP.camera.x) * OWOP.camera.zoom,
+                          cY = (16 * Math.floor(Y / 256) - OWOP.camera.y) * OWOP.camera.zoom,
+                          tX = fx.extra.player.tileX,
+                          tY = fx.extra.player.tileY,
+                          chunk = OWOP.world.protection.pixels[`${tX},${tY}`];
+                    ctx.globalAlpha = .5;
+                    ctx.fillStyle = chunk ? "#00FF00" : "#FF0000";
+                    ctx.fillRect(cX, cY, 16 * OWOP.camera.zoom, 16 * OWOP.camera.zoom);
+                    return true;
+                });
+
+                tool.setEvent("mousedown mousemove", fx => {
+                    const X = Math.floor(OWOP.mouse.tileX / OWOP.options.serverAddress[0].proto.chunkSize) * 16,
+                          Y = Math.floor(OWOP.mouse.tileY / OWOP.options.serverAddress[0].proto.chunkSize) * 16,
+                          chunk = OWOP.world.protection.pixels[`${X},${Y}`];
+                    switch (fx.buttons) {
+                        case 1:
+                            if (chunk) return false;
+                            for (let y = 0; y < 16; y++)
+                                for (let x = 0; x < 16; x++) {
+                                    OWOP.world.protection.pixels[`${X + x},${Y + y}`] = OWOP.world.getPixel(X + x, Y + y);
+                                    OWOP.world.protection.intervals[`${X + x},${Y + y}`] = setInterval(() => {
+                                        if (!OWOP.world.setPixel(X + x, Y + y, OWOP.world.protection.pixels[`${X + x},${Y + y}`])) {
+                                            let abc = getFree();
+                                            if(BOTS[abc].utils.bucket.allowance >= 1) BOTS[abc].world.setPixel(X + x, Y + y, OWOP.world.protection.pixels[`${X + x},${Y + y}`]);
+                                        }
+                                    }, 1);
+                                }
+                            return true;
+                            break;
+                        case 2:
+                            if (!chunk) return false;
+                            for (let y = 0; y < 16; y++)
+                                for (let x = 0; x < 16; x++) {
+                                    clearInterval(OWOP.world.protection.intervals[`${X + x},${Y + y}`]);
+                                    delete OWOP.world.protection.intervals[`${X + x},${Y + y}`];
+                                    delete OWOP.world.protection.pixels[`${X + x},${Y + y}`];
+                                }
+                            break;
+                    }
+                });
+            }));
+            OWOP.tool.addToolObject(new OWOP.tool.class("Bot Fill", OWOP.cursors.fill, OWOP.fx.player.NONE, OWOP.RANK.USER, e => {
+                e.extra.tickAmount = 30;
+                let t = [],
+                    n = null,
+                    o = OWOP.fx.player.RECT_SELECT_ALIGNED(1);
+                async function r() {
+                    var o = function(e, t) {
+                        return e && t && e[0] === t[0] && e[1] === t[1] && e[2] === t[2]
+                    }
+                    , r = function(e, r) {
+                        return !!o(OWOP.world.getPixel(e, r), n) && (t.unshift([e, r]),
+                                                                     !0)
+                    };
+                    if (t.length && n) {
+                        var i = OWOP.player.selectedColor
+                        , a = 0
+                        , s = e.extra.tickAmount;
+                        s *= 3;
+                        for (a = 0; a < s && t.length; a++) {
+                            var l = t.pop()
+                            , u = l[0]
+                            , d = l[1]
+                            , f = OWOP.world.getPixel(u, d);
+                            if (o(f, n) && !o(f, i)) {
+                                if (!OWOP.world.setPixel(u, d, i)) {
+                                    let abc = getFree();
+                                    if(BOTS[abc].utils.bucket.allowance === 0) sleep(42).then(i => {
+                                        if(!BOTS[abc].world.setPixel(u, d, i)) t.push(l);
+                                    });
+                                    if(BOTS[abc].utils.bucket.allowance !== 0) if(!BOTS[abc].world.setPixel(u, d, i)) t.push(l);
+                                    break
+                                }
+                                var p = r(u, d - 1)
+                                , m = r(u, d + 1)
+                                , v = r(u - 1, d)
+                                , g = r(u + 1, d);
+                                p && v && r(u - 1, d - 1),
+                                    p && g && r(u + 1, d - 1),
+                                    m && v && r(u - 1, d + 1),
+                                    m && g && r(u + 1, d + 1)
+                            }
+                        }
+                    }
+                }
+                e.setFxRenderer(function(e, r, i) {
+                    r.globalAlpha = .8,
+                        r.strokeStyle = e.extra.player.htmlRgb;
+                    var a = OWOP.camera.zoom;
+                    if (n && e.extra.isLocalPlayer) {
+                        r.beginPath();
+                        for (var s = 0; s < t.length; s++)
+                            r.rect((t[s][0] - OWOP.camera.x) * a, (t[s][1] - OWOP.camera.y) * a, a, a);
+                        r.stroke()
+                    } else
+                        o(e, r, i)
+                }),
+                    e.setEvent("mousedown", function(o) {
+                    4 & o.buttons || (n = OWOP.world.getPixel(o.tileX, o.tileY)) && (t.push([o.tileX, o.tileY]),
+                                                                                     e.setEvent("tick", r))
+                }),
+                    e.setEvent("mouseup deselect", function(o) {
+                    o && 1 & o.buttons || (n = null,
+                                           t = [],
+                                           e.setEvent("tick", null))
+                });
+
+            }));
+            OWOP.tool.addToolObject(new OWOP.tool.class("Bot Paste Asset", OWOP.cursors.paste, OWOP.fx.player.RECT_SELECT_ALIGNED(1), OWOP.RANK.USER, tool => {
+                tool.setEvent("mousedown mousemove", async e => {
+                    if(e.buttons === 1) {
+                        if(!selectedAsset) OWOP.chat.local("No asset selected!");
+                        if(typeof selectedAsset === "string") {
+                            // convert
+                            let cnv = document.createElement("canvas");
+                            let ctx = cnv.getContext('2d');
+                            let img = new Image();
+                            img.onload = () => {
+                                cnv.width = 2500;
+                                cnv.height = 2500;
+                                ctx.drawImage(img, 0, 0);
+                                selectedAsset = ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight);
+                            }
+                            img.src = selectedAsset;
+                            return OWOP.chat.local("Image is ready.");
+                        };
+                        let I = 0;
+                        let x = !Pixelization ? OWOP.mouse.tileX : Math.floor(OWOP.mouse.tileX/16)*16,
+                            y = !Pixelization ? OWOP.mouse.tileY : Math.floor(OWOP.mouse.tileY/16)*16;
+                        for(let Y = 0; Y < selectedAsset.height; Y++)
+                            for(let X = 0; X < selectedAsset.width; X++) {
+                                let abc = getFree();
+                                BOTS[abc].world.setPixel(x+X, y+Y, [selectedAsset.data[I++], selectedAsset.data[I++], selectedAsset.data[I++]]);
+                                I++;
+                            }
+                    }
+                })
+            }));
     });
 };
 

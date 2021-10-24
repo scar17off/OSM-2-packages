@@ -16,6 +16,9 @@
     'use strict';
 
 function install(){
+    let stop121 = false;
+    let OldPaste = false;
+    let Pixelization = false;
     OWOP.cursors.protect = OWOP.cursors.shield;
     OWOP.cursors.paste = OWOP.cursors.stamp;
     if(!localStorage.scaled_botnick) {
@@ -197,6 +200,15 @@ var OJS = class extends EventEmitter {
                         OJS.utils.log("Joining world: " + world);
                         OJS.emit(OJS.events.CONNECT);
                         OJS.world.name = world;
+//                        document.getElementById("scaled-bots-menu-list").insertAdjacentHTML("beforeend", `
+//<div id="scaled-bots-menu-list-bot-${options.ind}">
+//<span id="scaled-bots-menu-list-bot-${options.ind}-logo">ID: ${options.ind}</span>
+//<span id="scaled-bots-menu-list-bot-${options.ind}-coords">X: ${OJS.player.x} Y: ${OJS.player.y}</span>
+//<span id="scaled-bots-menu-list-bot-${options.ind}-pq">PQuota: ${Math.round(OJS.utils.bucket.allowance)}</span>
+//<button id="scaled-bots-menu-list-bot-${options.ind}-leave">Disconnect</button>
+//<hr>
+//</div>
+//`);
                         document.getElementById("scaled-bots-menu-list").insertAdjacentHTML("beforeend", `
 <div id="scaled-bots-menu-list-bot-${options.ind}">
 <span id="scaled-bots-menu-list-bot-${options.ind}-logo">ID: ${options.ind}</span>
@@ -1522,6 +1534,7 @@ button[id^="tool-"]:not(.selected) > div {
                 });
 
             }));
+            let aboab;
             OWOP.tool.addToolObject(new OWOP.tool.class("Bot Paste Asset", OWOP.cursors.paste, OWOP.fx.player.RECT_SELECT_ALIGNED(1), OWOP.RANK.USER, tool => {
                 tool.setEvent("mousedown mousemove", async e => {
                     if(e.buttons === 1) {
@@ -1530,6 +1543,7 @@ button[id^="tool-"]:not(.selected) > div {
                             // convert
                             let cnv = document.createElement("canvas");
                             let ctx = cnv.getContext('2d');
+                            aboab = ctx;
                             let img = new Image();
                             img.onload = () => {
                                 cnv.width = 2500;
@@ -1543,16 +1557,42 @@ button[id^="tool-"]:not(.selected) > div {
                         let I = 0;
                         let x = !Pixelization ? OWOP.mouse.tileX : Math.floor(OWOP.mouse.tileX/16)*16,
                             y = !Pixelization ? OWOP.mouse.tileY : Math.floor(OWOP.mouse.tileY/16)*16;
-                        for(let Y = 0; Y < selectedAsset.height; Y++)
-                            for(let X = 0; X < selectedAsset.width; X++) {
-                                let abc = getFree();
-                                BOTS[abc].world.setPixel(x+X, y+Y, [selectedAsset.data[I++], selectedAsset.data[I++], selectedAsset.data[I++]]);
-                                I++;
+                        async function pastePick() {
+                                for (let X = 0; X < selectedAsset.width; X++) {
+                                    for (let Y = 0; Y < selectedAsset.height; Y++) {
+                                        if (stop121) {
+                                            Y = selectedAsset.height;
+                                            X = selectedAsset.width;
+                                        }
+                                        //    for(let Y = 0; Y > selectedAsset.height; Y++){
+                                        //for(let X = 0; X > selectedAsset.width; X++) {
+                                        let x_ = (selectedAsset.width - X) - 1;
+                                        let y_ = (selectedAsset.height - Y) - 1;
+                                        let i = getFree();
+                                        if (!OldPaste) {
+                                            BOTS[i].utils.bucket.canSpend(0);
+                                            if (BOTS[i].utils.bucket.allowance <= 1) {
+                                                await sleep(0);
+                                                Y--
+                                            } else {
+                                                BOTS[i].world.setPixel(x + x_, y + y_, pixColor(aboab, x_, y_));
+                                            }
+                                        }
+                                    }
+                                }
+                                //    }
+                                //}
                             }
+                            pastePick();
                     }
                 })
             }));
     });
+};
+
+function pixColor(img, X, Y, RGB) {
+    var abab = img.getImageData(X, Y, 1, 1).data
+    return [abab[0], abab[1], abab[2]]
 };
 
 function append(src, onload) {

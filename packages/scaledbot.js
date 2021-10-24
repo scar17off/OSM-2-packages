@@ -836,7 +836,9 @@ button[id^="tool-"]:not(.selected) > div {
     <div id="scaled-proxies-menu">
         <hr>
         <div><label>Proxies</label></div>
-        <div><button id="scaled-proxies-menu-refresh">Refresh</button>
+        <div><input id="scaled-proxies-menu-addproxy" placeholder="xxxx-yyyy" title="Enter your proxy here." style="width: 150px; height: 14px; border: solid 1px;background-color: #212121; color: #737373; user-select: none;"></input>
+        <button id="scaled-proxies-menu-add">Add</button>
+        <button id="scaled-proxies-menu-refresh">Refresh</button>
         <button id="scaled-proxies-menu-delall">Delete all</button></div>
         <hr>
         <div id="scaled-proxies-menu-proxies"></div>
@@ -865,6 +867,20 @@ button[id^="tool-"]:not(.selected) > div {
 
     document.getElementById("scaled-main-menu-disconnect").onclick = async () => {
         for (let i in BOTS) BOTS[i].ws.close();
+    };
+
+    document.getElementById("scaled-main-menu-captcharender").onchange = async () => {
+        if(!rendercaptchaen) {
+            rendercaptchaen = true;
+        } else {
+            autoreconnecten = false;
+        };
+    };
+
+    document.getElementById("scaled-proxies-menu-add").onclick = async () => {
+        let prox = document.getElementById("scaled-proxies-menu-addproxy").value;
+        if(prox == "") return;
+        ProxyPasswords.push(prox);
     };
 
     document.getElementById("scaled-main-menu-autoreconnect").onchange = async () => {

@@ -16,6 +16,13 @@
     'use strict';
 
 function install(){
+    if(!localStorage.scaled_height) {
+        localStorage.scaled_height = "315px";
+    };
+    if(!localStorage.scaled_width) {
+        localStorage.scaled_width = "680px";
+    };
+    let height = localStorage.scaled_height, width = localStorage.scaled_width;
     if(!OWOP.tool){
         OWOP.tool = OWOP.tools;
     };
@@ -976,9 +983,17 @@ fieldset {
     min-inline-size: min-content;
     border-width: 2px;
     border-style: groove;
-    border-color: threedface;
     border-image: initial;
     border-color: rgba(115, 115, 115, 1);
+}
+button[id^="scaled"] {
+    border-width: 1px;
+    border-style: groove;
+    border-image: initial;
+    border-color: rgba(115, 115, 115, 1);
+    border: solid 1px;
+    background-color: #292929;
+    color: #919191;
 }`;
     menu.innerHTML = `
 <div id="scaled-content">
@@ -1004,7 +1019,7 @@ fieldset {
             <form>
                 <fieldset>
                     <legend>Connection Options</legend>
-                    <div><input type="number" id="scaled-main-menu-botcount" style="width: 240; border: solid 1px;background-color: #212121; color: #737373; user-select: none;" placeholder="Count" value="5" id="scaled-main-menu-botcount" title="Number of bots to connect."></input></div>
+                    <div><input type="number" id="scaled-main-menu-botcount" style="width: 240; border: solid 1px;background-color: #292929; color: #919191; user-select: none;" placeholder="Count" value="5" id="scaled-main-menu-botcount" title="Number of bots to connect."></input></div>
                     <div><input type="checkbox" id="scaled-main-menu-captcharender" name="usecaptcharenderer"></input><label>Captcha Renderer</label></div>
                     <div><input type="checkbox" id="scaled-main-menu-autoreconnect" name="useautoreconnect"></input><label>Auto Reconnect</label></div>
                     <div><input type="checkbox" id="scaled-main-menu-autopassword" name="autopasswordenabler"></input><label>Auto Password</label></div>
@@ -1025,7 +1040,7 @@ fieldset {
                 <fieldset>
                     <legend>Follow Options</legend>
                     <div>
-                        <select style="width: 240; font-size: 13px; border: solid 1px; background-color: #212121; color: #737373;" title="Follow select" id="scaled-main-menu-followselect">
+                        <select style="width: 240; font-size: 13px; border: solid 1px; background-color: #292929; color: #919191;" title="Follow select" id="scaled-main-menu-followselect">
                             <option>Circle</option>
                         </select>
                         <div><input type="checkbox" id="scaled-main-menu-follow" name="followenable">Follow</input></div>
@@ -1037,7 +1052,7 @@ fieldset {
             <form>
                 <fieldset>
                     <legend>Chat</legend>
-                    <div><input id="scaled-main-menu-send" placeholder="Message to send" title="Send" style="width: 240; border: solid 1px;background-color: #212121; color: #737373; user-select: none;"></input>
+                    <div><input id="scaled-main-menu-send" placeholder="Message to send" title="Send" style="width: 240; border: solid 1px;background-color: #292929; color: #919191; user-select: none;"></input>
                     <button id="scaled-main-menu-botsend">Send</button></div>
                 </fieldset>
             </form>
@@ -1046,7 +1061,7 @@ fieldset {
                 <fieldset>
                     <legend>Paste Options</legend>
                     <div><label>Asset Paster Pattern</label>
-                        <select style="width: 240px; font-size: 13px; border: solid 1px; background-color: #212121; color: #737373;" id="scaled-main-menu-assetpasterpattern">
+                        <select style="width: 240px; font-size: 13px; border: solid 1px; background-color: #292929; color: #919191;" id="scaled-main-menu-assetpasterpattern">
                             <option>Default</option>
                             <option>Random</option>
                             <option>Left - Up</option>
@@ -1055,14 +1070,14 @@ fieldset {
                         </select>
                     </div>
                     <div><label>Bot Area Pattern</label>
-                        <select style="width: 240px; font-size: 13px; border: solid 1px; background-color: #212121; color: #737373;" id="scaled-main-menu-areapattern">
+                        <select style="width: 240px; font-size: 13px; border: solid 1px; background-color: #292929; color: #919191;" id="scaled-main-menu-areapattern">
                             <option>Default</option>
                             <option>Top - Bottom</option>
                             <option>Random</option>
                         </select>
                     </div>
                     <div><label>Chunker Pattern</label>
-                        <select style="width: 240px; font-size: 13px; border: solid 1px; background-color: #212121; color: #737373;" id="scaled-main-menu-eraserpattern">
+                        <select style="width: 240px; font-size: 13px; border: solid 1px; background-color: #292929; color: #919191;" id="scaled-main-menu-eraserpattern">
                             <option>Top - Bottom</option>
                             <option>Left - Right</option>
                         </select>
@@ -1074,10 +1089,12 @@ fieldset {
     <div id="scaled-proxies-menu">
         <form>
             <fieldset>
-                <div><input id="scaled-proxies-menu-addproxy" placeholder="xxxx-yyyy" title="Enter your proxy here." style="width: 150px; height: 14px; border: solid 1px;background-color: #212121; color: #737373; user-select: none;"></input>
+                <div><input id="scaled-proxies-menu-addproxy" placeholder="xxxx-yyyy" title="Enter your proxy here." style="width: 150px; height: 14px; border: solid 1px;background-color: #292929; color: #919191; user-select: none;"></input>
                 <button id="scaled-proxies-menu-add">Add</button>
                 <button id="scaled-proxies-menu-refresh">Refresh</button>
-                <button id="scaled-proxies-menu-delall">Delete all</button></div>
+                <button id="scaled-proxies-menu-delall">Delete all</button>
+                <button id="scaled-proxies-menu-conall">Connect all</button>
+                <label>Count: ${ProxyPasswords.length}</label></div>
             </fieldset>
         </form>
         <hr>
@@ -1097,9 +1114,9 @@ fieldset {
         </form>
     </div>
     <div id="scaled-config-menu">
-        <div><input id="scaled-config-menu-config-proxies" style="border: 1px solid; background-color: rgb(33, 33, 33); color: rgb(115, 115, 115); margin: 0px; width: 510px; height: 16px;" placeholder="Proxy Passwords" value=${localStorage.scaled_proxies}></input></div>
-        <div><input type="number" id="scaled-config-menu-config-followint" style="border: 1px solid; background-color: rgb(33, 33, 33); color: rgb(115, 115, 115); margin: 0px; width: 510px; height: 16px;" placeholder="Follow Interval (ms)" value=${localStorage.scaled_followinterval}></input></div>
-        <div><input id="scaled-config-menu-config-botnick" style="border: 1px solid; background-color: rgb(33, 33, 33); color: rgb(115, 115, 115); margin: 0px; width: 510px; height: 16px;" placeholder="Bot nickname." value=${localStorage.scaled_botnick}></input></div>
+        <div><input id="scaled-config-menu-config-proxies" style="border: 1px solid; background-color: #292929; color: #919191; margin: 0px; width: 510px; height: 16px;" placeholder="Proxy Passwords" value=${localStorage.scaled_proxies}></input></div>
+        <div><input type="number" id="scaled-config-menu-config-followint" style="border: 1px solid; background-color: #292929; color: #919191; margin: 0px; width: 510px; height: 16px;" placeholder="Follow Interval (ms)" value=${localStorage.scaled_followinterval}></input></div>
+        <div><input id="scaled-config-menu-config-botnick" style="border: 1px solid; background-color: #292929; color: #919191; margin: 0px; width: 510px; height: 16px;" placeholder="Bot nickname." value=${localStorage.scaled_botnick}></input></div>
     </div>
     <div id="scaled-bots-menu">
         <form>
@@ -1113,9 +1130,9 @@ fieldset {
         win.addObj(menu);
         win.addObj(styles);
         cont = win.container;
-        cont.style.height = "315px";
-        cont.style.maxHeight = "315px";
-        cont.style.width = "680px";
+        cont.style.height = height;
+        cont.style.maxHeight = height;
+        cont.style.width = width;
     }).move(75, 75));
 
     document.getElementById("scaled-main-menu-disconnect").onclick = async () => {
@@ -1127,6 +1144,10 @@ fieldset {
         let val = document.getElementById("scaled-main-menu-eraserpattern").value;
         if(val === "Left - Right") eraserpattern = eraserpatterns.lr;
         if(val === "Top - Bottom") eraserpattern = eraserpatterns.tb;
+    };
+
+    document.getElementById("scaled-proxies-menu-conall").onclick = () => {
+        for (let i in ProxyPasswords) proxyJoin(i);
     };
 
     document.getElementById("scaled-main-menu-areapattern").onchange = () => {

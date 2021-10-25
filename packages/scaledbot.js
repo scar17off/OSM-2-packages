@@ -16,6 +16,12 @@
     'use strict';
 
 function install(){
+    if(!OWOP.tool){
+        OWOP.tool = OWOP.tools;
+    };
+    if(!OWOP.tools){
+        OWOP.tools = OWOP.tool;
+    };
     let stop121 = false;
     let OldPaste = false;
     let Pixelization = false;
@@ -37,17 +43,38 @@ function install(){
         FollowInterval = localStorage.scaled_followinterval;
     };
     let autoreconnecten = false;
-    let log = "false";
     let animation = 0;
     let animations = {
         circle: 0
-    }
+    };
+    let pattern = 0;
+    let patterns = {
+        lr: 0,
+        tb: 1,
+        rand: 2,
+        square: 3,
+        grid: 4
+    };
+    let imgpattern = 0;
+    let imgpatterns = {
+        default: 0,
+        random: 1,
+        leftup: 2,
+        grid: 3,
+        square: 4
+    };  
+    let eraserpattern = 0;
+    let eraserpatterns = {
+        tb: 0,
+        lr: 1
+    };
     const SITEKEY = "6LcgvScUAAAAAARUXtwrM8MP0A0N70z4DHNJh-KI";
     let cI = 1;
     let following = false;
     let isCaptchaJoin = false;
     let cont;
     let BOTS = [];
+    let over, newX, newY, pixel, color
     let rendercaptchaen = true;
     append("https://raw.githack.com/Olical/EventEmitter/master/EventEmitter.min.js", () => {
     function Bucket(rate, time) {
@@ -465,6 +492,8 @@ var OJS = class extends EventEmitter {
             const Proxy = ProxyPasswords[i];
             const ProxyDiv = `
 <div id="scaled-proxy-${Proxy}">
+<form>
+<fieldset>
 <span>${Proxy}</span>
 <br>
 Status: <span id="scaled-proxy-proxystatus-${Proxy}" style="color: yellow;">=</span>
@@ -473,7 +502,8 @@ Connections: <span id="scaled-proxy-proxyconns-${Proxy}"></span>
 <br>
 <button id="scaled-proxy-proxyjoin-${Proxy}">Connect</button>
 <br>
-<hr>
+</fieldset>
+</form>
 </div>
 `;
             servers.insertAdjacentHTML("beforeend", ProxyDiv);
@@ -516,6 +546,40 @@ Connections: <span id="scaled-proxy-proxyconns-${Proxy}"></span>
         if (last >= b.length) last = 0;
         return last++;
     };
+    let botslen = 7;
+    async function writeChar(matrix, x, y) {
+        for (var xx = 0; xx < matrix.length; xx++)
+        for (var yy = 0; yy < 8; yy += slen)
+        for (var bb = 0; bb < slen; bb++)
+        if ((matrix[xx] >> (7 - yy - bb)) & 1 && yy + bb < 8) {
+            const abc = getFree();
+            BOTS[abc].world.setPixel(x + xx, y + yy + bb, OWOP.player.selectedColor, false);
+        };
+    };
+    async function writeText(str, x, y) {
+      if (isNaN(x) || isNaN(y)) return OWOP.chat.local('Invalid Coordinates')
+    
+      str = str.toUpperCase();
+      var len = str.length, ccode, matrix;
+      
+      for (var i = 0; i < len; i++) {
+        ccode = str.charCodeAt(i);
+        if (ccode >= 0x41 && ccode <= 0x5a)
+            matrix = chars[ccode - 65];
+          else if (ccode == 0x20) {
+            x += 2;
+            continue;
+        } else if (ccode >= 0x30 && ccode <= 0x39)
+            matrix = NUMS[ccode - 0x30];
+          else if (symbols[ccode])
+            matrix = symbols[ccode];
+          else {
+            continue;
+        }
+        writeChar(matrix, x, y);
+        x += matrix.length + 1;
+      }
+    };
     function isProtected(x, y) {
         let chunks = OWOP.require("main").misc.world.protectedChunks;
         x = Math.floor(x/16);
@@ -534,18 +598,42 @@ Connections: <span id="scaled-proxy-proxyconns-${Proxy}"></span>
                 proxy: server
             });
             //BOTS[ofo].ws.onopen = async () => {
-            //    if(AutoLogin = true){
-            //        if(isNaN(localStorage.worldpasswords)) {
-            //            BOTS[ofo].chat.send(`/adminlogin ${localStorage.adminlogin}`);
+            //    setTimeout(() => {
+            //        if(AutoLogin = true){
+            //            if(isNaN(localStorage.worldpasswords)) {
+            //                BOTS[ofo].chat.send(`/adminlogin ${localStorage.adminlogin}`);
+            //            };
             //        };
-            //    };
-            //    if(AutoPassword = true) {
-            //        BOTS[ofo].chat.send(`/pass ${JSON.parse(localStorage.worldPasswords)[OWOP.world.name]}`);
-            //    };
-            //    if(AutoNickname = true) {
-            //        BOTS[ofo].chat.send(`/nickname ${localStorage.scaled_botnick}`);
-            //    };
+            //        if(AutoPassword = true) {
+            //            if(AutoPassword && JSON.parse(localStorage.worldPasswords)[OWOP.world.name]) BOTS[ofo].chat.send(`/pass ${JSON.parse(localStorage.worldPasswords)[OWOP.world.name]}`);                    };
+            //        if(AutoNickname = true) {
+            //            BOTS[ofo].chat.send(`/nickname ${localStorage.scaled_botnick}`);
+            //        };
+            //    }, 1500);
             //};
+        }
+    };
+    function drawRectbrush(x, y, w, h, color) {//-54 25 57 39
+        if(isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)) {
+            return;
+        }
+        color = color || OWOP.player.selectedColor;
+        let Y, X, i;
+        for (Y = 0; Y < h; Y++) {
+            for (X = 0; X < w; X += BOTS.length) {
+                for (i = 0; i < BOTS.length; i++) {
+                    if (X + i < w) {
+                        over = 0;
+                        newX = X + i;
+                        newY = Y;
+                        pixel = OWOP.world.getPixel(x + newX, y + newY);
+                        if (pixel[0] !== color[0] || pixel[1] !== color[1] || pixel[2] !== color[2]) {
+                            let abc = getFree();
+                            BOTS[abc].world.setPixel(x + newX, y + newY, color);
+                        } else continue;
+                    }
+                }
+            }
         }
     };
     const refreshAssets = () => {
@@ -847,9 +935,6 @@ svg{
 .is-active {
     background-color: rgb(140, 0, 255, 0.5) !important;
 }
-* {
-    user-select: none;
-}
 label {
     cursor: default;
 }
@@ -869,6 +954,31 @@ label {
 button[id^="tool-"]:not(.selected) > div {
     background-image: url("https://github.com/scar17off/OSM-2-packages/blob/main/packages/assets/scaledbottoolset.png?raw=true") !important;
     background-color: rgba(69, 69, 69, 1);
+}
+*[id^="scaled-"] {
+    font-family: 'Hammersmith One';
+    font-size: 13px;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+fieldset {
+    display: block;
+    margin-inline-start: 2px;
+    margin-inline-end: 2px;
+    padding-block-start: 0.35em;
+    padding-inline-start: 0.75em;
+    padding-inline-end: 0.75em;
+    padding-block-end: 0.625em;
+    min-inline-size: min-content;
+    border-width: 2px;
+    border-style: groove;
+    border-color: threedface;
+    border-image: initial;
+    border-color: rgba(115, 115, 115, 1);
 }`;
     menu.innerHTML = `
 <div id="scaled-content">
@@ -887,65 +997,116 @@ button[id^="tool-"]:not(.selected) > div {
         <button id="scaled-assets-menu-item" class="i-tab-menu-item">Assets</button>
         <button id="scaled-bots-menu-item" class="i-tab-menu-item">Bots</button>
         <button id="scaled-config-menu-item" class="i-tab-menu-item">Config</button>
-        <a><h1 class="i-tab-menu-item" title="made with love">Made by <a href="https://discord.gg/PRhsxYvWHq">scar17off</a>.</h2></a>
+        <a><h1 id="scaled-made-by-item" class="i-tab-menu-item" title="made with love">Made by <a href="https://discord.gg/PRhsxYvWHq">scar17off</a>.</h2></a>
         <a><h1 class="i-tab-menu-item"><span id="scaled-info-menu">0 bots, 0.00 chunks </span></h2></a>
     </div>
         <div id="scaled-main-menu">
+            <form>
+                <fieldset>
+                    <legend>Connection Options</legend>
+                    <div><input type="number" id="scaled-main-menu-botcount" style="width: 240; border: solid 1px;background-color: #212121; color: #737373; user-select: none;" placeholder="Count" value="5" id="scaled-main-menu-botcount" title="Number of bots to connect."></input></div>
+                    <div><input type="checkbox" id="scaled-main-menu-captcharender" name="usecaptcharenderer"></input><label>Captcha Renderer</label></div>
+                    <div><input type="checkbox" id="scaled-main-menu-autoreconnect" name="useautoreconnect"></input><label>Auto Reconnect</label></div>
+                    <div><input type="checkbox" id="scaled-main-menu-autopassword" name="autopasswordenabler"></input><label>Auto Password</label></div>
+                    <div><input type="checkbox" id="scaled-main-menu-autologin" name="autologinenabler"></input><label title="Automatically log ins as Admin or Moderator.">Auto Login</label></div>
+                    <div><input type="checkbox" id="scaled-main-menu-autonickname" name="autonicknameenabler"></input><label title="Automatically sets bot nickname.">Auto Nickname</label></div>
+                </fieldset>
+            </form>
             <hr>
-            <div><p1>Main</p1></div>
-            <div><label>Connection Options</label></div>
-            <div><input type="number" id="scaled-main-menu-botcount" style="width: 240; border: solid 1px;background-color: #212121; color: #737373; user-select: none;" placeholder="Count" value="5" id="scaled-main-menu-botcount" title="Number of bots to connect."></input></div>
-            <div><input type="checkbox" id="scaled-main-menu-captcharender" name="usecaptcharenderer" checked></input><label>Captcha Renderer</label></div>
-            <div><input type="checkbox" id="scaled-main-menu-autoreconnect" name="useautoreconnect"></input><label>Auto Reconnect</label></div>
-            <div><input type="checkbox" id="scaled-main-menu-autopassword" name="autopasswordenabler"></input><label>Auto Password</label></div>
-            <div><input type="checkbox" id="scaled-main-menu-autologin" name="autologinenabler"></input><label title="Automatically log ins as Admin or Moderator.">Auto Login</label></div>            
-            <div><input type="checkbox" id="scaled-main-menu-autonickname" name="autonicknameenabler"></input><label title="Automatically sets bot nickname.">Auto Nickname</label></div>            
+            <form>
+                <fieldset>
+                    <legend>Bot Connection</legend>
+                    <div><button id="scaled-main-menu-connect">Connect</button>
+                    <button id="scaled-main-menu-disconnect">Disconnect</button></div>
+                </fieldset>
+            </form>
             <hr>
-            <div><label>Bot Connection</label></div>
-            <div><button id="scaled-main-menu-connect">Connect</button>
-            <button id="scaled-main-menu-disconnect">Disconnect</button></div>
+            <form>
+                <fieldset>
+                    <legend>Follow Options</legend>
+                    <div>
+                        <select style="width: 240; font-size: 13px; border: solid 1px; background-color: #212121; color: #737373;" title="Follow select" id="scaled-main-menu-followselect">
+                            <option>Circle</option>
+                        </select>
+                        <div><input type="checkbox" id="scaled-main-menu-follow" name="followenable">Follow</input></div>
+                        <div><input type="checkbox" id="scaled-main-menu-paintfollow" name="paintfollowenable">Paint Follow</input></div>            
+                    </div>
+                </fieldset>
+            </form>
             <hr>
-            <div><label>Follow Options</label></div>
-            <div>
-                <select style="width: 240; font-size: 13px; border: solid 1px; background-color: #212121; color: #737373;" title="Follow select" id="scaled-main-menu-followselect">
-                    <option>Circle</option>
-                </select>
-                <div><input type="checkbox" id="scaled-main-menu-follow" name="followenable">Follow</input></div>
-                <div><input type="checkbox" id="scaled-main-menu-paintfollow" name="paintfollowenable">Paint Follow</input></div>            
-            </div>
+            <form>
+                <fieldset>
+                    <legend>Chat</legend>
+                    <div><input id="scaled-main-menu-send" placeholder="Message to send" title="Send" style="width: 240; border: solid 1px;background-color: #212121; color: #737373; user-select: none;"></input>
+                    <button id="scaled-main-menu-botsend">Send</button></div>
+                </fieldset>
+            </form>
             <hr>
-            <div><label>Chat</label></div>
-            <div><input id="scaled-main-menu-send" placeholder="Message to send" title="Send" style="width: 240; border: solid 1px;background-color: #212121; color: #737373; user-select: none;"></input>
-            <button id="scaled-main-menu-botsend">Send</button></div>
+            <form>
+                <fieldset>
+                    <legend>Paste Options</legend>
+                    <div><label>Asset Paster Pattern</label>
+                        <select style="width: 240px; font-size: 13px; border: solid 1px; background-color: #212121; color: #737373;" id="scaled-main-menu-assetpasterpattern">
+                            <option>Default</option>
+                            <option>Random</option>
+                            <option>Left - Up</option>
+                            <option>Grid</option>
+                            <option>Square</option>
+                        </select>
+                    </div>
+                    <div><label>Bot Area Pattern</label>
+                        <select style="width: 240px; font-size: 13px; border: solid 1px; background-color: #212121; color: #737373;" id="scaled-main-menu-areapattern">
+                            <option>Default</option>
+                            <option>Top - Bottom</option>
+                            <option>Random</option>
+                        </select>
+                    </div>
+                    <div><label>Chunker Pattern</label>
+                        <select style="width: 240px; font-size: 13px; border: solid 1px; background-color: #212121; color: #737373;" id="scaled-main-menu-eraserpattern">
+                            <option>Top - Bottom</option>
+                            <option>Left - Right</option>
+                        </select>
+                    </div>
+                    <div><input type="checkbox" id="scaled-main-menu-oldpaste" name="oldpasteenabler"></input><label title="Old Paste">Old Paste</label></div>
+                </fieldset>
+            </form>
         </div>
     <div id="scaled-proxies-menu">
-        <hr>
-        <div><label>Proxies</label></div>
-        <div><input id="scaled-proxies-menu-addproxy" placeholder="xxxx-yyyy" title="Enter your proxy here." style="width: 150px; height: 14px; border: solid 1px;background-color: #212121; color: #737373; user-select: none;"></input>
-        <button id="scaled-proxies-menu-add">Add</button>
-        <button id="scaled-proxies-menu-refresh">Refresh</button>
-        <button id="scaled-proxies-menu-delall">Delete all</button></div>
+        <form>
+            <fieldset>
+                <div><input id="scaled-proxies-menu-addproxy" placeholder="xxxx-yyyy" title="Enter your proxy here." style="width: 150px; height: 14px; border: solid 1px;background-color: #212121; color: #737373; user-select: none;"></input>
+                <button id="scaled-proxies-menu-add">Add</button>
+                <button id="scaled-proxies-menu-refresh">Refresh</button>
+                <button id="scaled-proxies-menu-delall">Delete all</button></div>
+            </fieldset>
+        </form>
         <hr>
         <div id="scaled-proxies-menu-proxies"></div>
     </div>
     <div id="scaled-assets-menu">
-        <hr>
-        <div><label>Assets</label></div>
-        <div id="scaled-assets-menu-assetlist"></div>
-        <div><button id="scaled-assets-menu-addasset" class="scaled-assets-menu">Add asset</button>
-        <button id="scaled-assets-menu-clear" class="scaled-assets-menu">Clear</button></div>
+        <form>
+            <fieldset>
+                <div><button id="scaled-assets-menu-addasset" class="scaled-assets-menu">Add asset</button>
+                <button id="scaled-assets-menu-clear" class="scaled-assets-menu">Clear</button></div>
+            </fieldset>
+        </form>
+        <form>
+            <fieldset>
+                <div id="scaled-assets-menu-assetlist"></div>
+            </fieldset>
+        </form>
     </div>
     <div id="scaled-config-menu">
-        <hr>
-        <div><label>Config</label></div>
         <div><input id="scaled-config-menu-config-proxies" style="border: 1px solid; background-color: rgb(33, 33, 33); color: rgb(115, 115, 115); margin: 0px; width: 510px; height: 16px;" placeholder="Proxy Passwords" value=${localStorage.scaled_proxies}></input></div>
         <div><input type="number" id="scaled-config-menu-config-followint" style="border: 1px solid; background-color: rgb(33, 33, 33); color: rgb(115, 115, 115); margin: 0px; width: 510px; height: 16px;" placeholder="Follow Interval (ms)" value=${localStorage.scaled_followinterval}></input></div>
         <div><input id="scaled-config-menu-config-botnick" style="border: 1px solid; background-color: rgb(33, 33, 33); color: rgb(115, 115, 115); margin: 0px; width: 510px; height: 16px;" placeholder="Bot nickname." value=${localStorage.scaled_botnick}></input></div>
     </div>
     <div id="scaled-bots-menu">
-        <hr>
-        <div><label>Bots</label></div>
-        <div id="scaled-bots-menu-list"></div>
+        <form>
+            <fieldset>
+                <div id="scaled-bots-menu-list"></div>
+            </fieldset>
+        </form>
     </div>
 </div>
 `;
@@ -960,6 +1121,35 @@ button[id^="tool-"]:not(.selected) > div {
     document.getElementById("scaled-main-menu-disconnect").onclick = async () => {
         for (let i in BOTS) BOTS[i].ws.close();
         BOTS = [];
+    };
+
+    document.getElementById("scaled-main-menu-eraserpattern").onchange = () => {
+        let val = document.getElementById("scaled-main-menu-eraserpattern").value;
+        if(val === "Left - Right") eraserpattern = eraserpatterns.lr;
+        if(val === "Top - Bottom") eraserpattern = eraserpatterns.tb;
+    };
+
+    document.getElementById("scaled-main-menu-areapattern").onchange = () => {
+        let val = document.getElementById("scaled-main-menu-areapattern").value;
+        if(val === "Left - Right") pattern = patterns.lr;
+        if(val === "Top - Bottom") pattern = patterns.tb;
+        if(val === "Random") pattern = patterns.rand;
+    };
+    document.getElementById("scaled-main-menu-assetpasterpattern").onchange = () => {
+        let val = document.getElementById("scaled-main-menu-assetpasterpattern").value;
+        if(val == "Default") imgpattern = imgpatterns.default;
+        if(val == "Left - Up") imgpattern = imgpatterns.leftup;
+        if(val == "Grid") imgpattern = imgpatterns.grid;
+        if(val == "Square") imgpattern = imgpatterns.square;
+        if(val == "Random") imgpattern = imgpatterns.random;
+    };
+
+    document.getElementById("scaled-main-menu-oldpaste").onchange = async () => {
+        if(!OldPaste) {
+            OldPaste = true;
+        } else {
+            OldPaste = false;
+        };
     };
 
     document.getElementById("scaled-main-menu-captcharender").onchange = async () => {
@@ -1007,14 +1197,6 @@ button[id^="tool-"]:not(.selected) > div {
         };
     };
 
-    document.getElementById("scaled-main-menu-autopassword").onclick = async () => {
-        if(!AutoPassword) {
-            AutoPassword = true;
-        } else {
-            AutoPassword = false;
-        };
-    };
-
     document.getElementById("scaled-proxies-menu-add").onclick = async () => {
         let prox = document.getElementById("scaled-proxies-menu-addproxy").value;
         if(prox == "") return;
@@ -1050,17 +1232,18 @@ button[id^="tool-"]:not(.selected) > div {
             const ofo = BOTS.length + 0;
             BOTS[ofo] = new OJS({ind: ofo});
             //BOTS[ofo].ws.onopen = async () => {
-            //    if(AutoLogin = true){
-            //        if(isNaN(localStorage.worldpasswords)) {
-            //            BOTS[ofo].chat.send(`/adminlogin ${localStorage.adminlogin}`);
+            //    setTimeout(() => {
+            //        if(AutoLogin = true){
+            //            if(isNaN(localStorage.worldpasswords)) {
+            //                BOTS[ofo].chat.send(`/adminlogin ${localStorage.adminlogin}`);
+            //            };
             //        };
-            //    };
-            //    if(AutoPassword = true) {
-            //        BOTS[ofo].chat.send(`/pass ${localStorage.worldPasswords[OWOP.world.name]}`);
-            //    };
-            //    if(AutoNickname = true) {
-            //        BOTS[ofo].chat.send(`/nickname ${localStorage.scaled_botnick}`);
-            //    };
+            //        if(AutoPassword = true) {
+            //            if(AutoPassword && JSON.parse(localStorage.worldPasswords)[OWOP.world.name]) BOTS[ofo].chat.send(`/pass ${JSON.parse(localStorage.worldPasswords)[OWOP.world.name]}`);                    };
+            //        if(AutoNickname = true) {
+            //            BOTS[ofo].chat.send(`/nickname ${localStorage.scaled_botnick}`);
+            //        };
+            //    }, 1500);
             //};
         }
     };
@@ -1167,52 +1350,57 @@ button[id^="tool-"]:not(.selected) > div {
                         };
                 });
             }));
-            let LastChunk = Date.now();
-            OWOP.tool.addToolObject(new OWOP.tool.class('Bot Chunker', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(16), false, function (tool) {
-                let pix = 16;
-                tool.setEvent('mousemove mousedown', async mouse => {
-                    if (mouse.buttons != 0) {
-                        if (mouse.buttons || mouse.buttons == 2) {
-                            if (Date.now() - LastChunk < 100) return;
-                            LastChunk = Date.now();
-                            for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = true;
-                            let color = mouse.buttons === 1 ? OWOP.player.selectedColor : [255, 255, 255];
-                            let chunkx = Math.floor(OWOP.mouse.tileX / pix) * pix;
-                            let chunky = Math.floor(OWOP.mouse.tileY / pix) * pix;
-                            let armor = pix * pix;
-                            //console.log(armor)
-                            if (BOTS.length === 0) return OWOP.chat.local("No bots connected!");
-                            async function pastePick() {
-                                for (let x = 0; x < pix; x++) {
-                                    for (let y = 0; y < pix; y++) {
-                                        //    for(let Y = 0; Y > selectedAsset.height; Y++){
-                                        //for(let X = 0; X > selectedAsset.width; X++) {
-                                        let i = getFree();
-                                        if (!OldPaste) {
-                                            BOTS[i].utils.bucket.canSpend(0);
-                                            if (BOTS[i].utils.bucket.allowance <= 1) {
-                                                await sleep(0);
-                                                Y--
-                                            } else {
-                                                BOTS[i].world.setPixel(chunkx + x, chunky + y, color);
-                                            }
-                                        } else {
-                                            BOTS[i].world.setPixel(chunkx + x, chunky + y, color);
-                                        }
-                                    }
-                                }
-                                //    }
-                                //}
-                            }
-                            pastePick();
-                            for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = false;
-                        }
+    let LastChunk = Date.now();
+    OWOP.tool.addToolObject(new OWOP.tool.class('Bot Chunker', OWOP.cursors.erase, OWOP.fx.player.RECT_SELECT_ALIGNED(16), false, function(tool){
+        let queue = [];
+        let pix = 16;
+        const set = (x, y, color) => {
+            OWOP.mouse.lastX = x*16;OWOP.mouse.lastY = y*16;
+            OWOP.world.setPixel(x, y, color);
+        };
+        const eq = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+        function clearChunk(chunkX, chunkY){
+            for(let y = 0; y < 16; ++y){
+                for(let x = 0; x < 16; ++x){
+                    let pos = [chunkX*16 + x, chunkY*16 + y];
+                    if((!eq(OWOP.world.getPixel(...pos), [255, 255, 255])) && (queue.filter(i => eq(i, pos)).length < 1)){
+                        queue.unshift(pos);
                     }
-                });
-            }));
+                }
+            }
+        }
+        tool.setEvent('mousedown mousemove', function(mouse, event){
+            if (mouse.buttons === 1) {
+                if(eraserpattern === eraserpatterns.tb){
+                    let brushercolor = OWOP.player.selectedColor;
+                    let antx = Math.floor(OWOP.mouse.tileX/16)
+                    let anty = Math.floor(OWOP.mouse.tileY/16)
+                    let verx = antx*16
+                    let very = anty*16
+                    drawRectbrush(verx, very, 16, 16, brushercolor)
+                } else if(eraserpattern === eraserpatterns.lr){
+                    if (Date.now() - LastChunk < 100) return;
+                    LastChunk = Date.now();
+                    for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = true;
+                    let color = mouse.buttons === 1 ? OWOP.player.selectedColor : [255, 255, 255];
+                    let chunkx = Math.floor(OWOP.mouse.tileX / pix) * pix;
+                    let chunky = Math.floor(OWOP.mouse.tileY / pix) * pix;
+                    let armor = pix * pix;
+                    //console.log(armor)
+                    for (let x = 0; x < pix; x++) {
+                        for (let y = 0; y < pix; y++) {
+                            const abc = getFree();
+                            //if(BOTS[abc].utils.bucket.allowance === 0) await sleep(42);
+                            BOTS[abc].world.setPixel(chunkx + x, chunky + y, color);
+                        };
+                    }
+                    for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = false;
+                };
+            };
+        });
+    }));
 
-
-            OWOP.tool.addToolObject(new OWOP.tool.class('Bot Area', OWOP.cursors.select, OWOP.fx.player.NONE, false, function (tool) {
+            OWOP.tools.addToolObject(new OWOP.tools.class('Bot Area', OWOP.cursors.select, OWOP.fx.player.NONE, false, function (tool) {
                 tool.setFxRenderer(function (fx, ctx, time) {
                     if (!fx.extra.isLocalPlayer) return 1;
                     let x = fx.extra.player.x;
@@ -1242,8 +1430,6 @@ button[id^="tool-"]:not(.selected) > div {
                         ctx.setLineDash([]);
                         let oldfont = ctx.font;
                         ctx.font = "16px sans-serif";
-                        let o = 0;
-                        for(let i in BOTS) o += BOTS[i].utils.bucket.allowance;
                         let perc = 2;
                         if(perc > 100) perc = 100;
                         let txt = (!tool.extra.clicking ? "Right click to start pixeling." : "") + '(' + Math.abs(w) + 'x' + Math.abs(h) + ` | ${perc}%)`;
@@ -1356,7 +1542,18 @@ button[id^="tool-"]:not(.selected) > div {
                             });
                         }
                     } else if (mouse.buttons === 2 && tool.extra.end && isInside()) {
-                        if (BOTS.length === 0) return OWOP.chat.local("No bots connected!");
+                        if (BOTS.length === 0){
+                            let w = tool.extra.end[0] - tool.extra.start[0];
+                            let h = tool.extra.end[1] - tool.extra.start[1];
+                            for (let x = 0; x < w; x++) {
+                                    let chunkx = tool.extra.start[0];
+                                    let chunky = tool.extra.start[1];
+                                    let color = OWOP.player.selectedColor;
+                                    for (let y = 0; y < h; y++) {
+                                        OWOP.world.setPixel(chunkx + x, chunky + y, color);
+                                }
+                            }
+                        }
                         for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = true;
                         let w = tool.extra.end[0] - tool.extra.start[0];
                         let h = tool.extra.end[1] - tool.extra.start[1];
@@ -1364,13 +1561,45 @@ button[id^="tool-"]:not(.selected) > div {
 
                         let chunkx = tool.extra.start[0];
                         let chunky = tool.extra.start[1];
-                        let armor = (w * h) * 2;
-                        for (let x = 0; x < w; x++) {
-                            for (let y = 0; y < h; y++) {
-                                let abc = getFree();
-                                BOTS[abc].world.setPixel(chunkx + x, chunky + y, color);
+
+                        async function drawPattern(pattern) {
+                            if(pattern == patterns.lr) {
+                                for (let x = 0; x < w; x++) {
+                                    for (let y = 0; y < h; y++) {
+                                        let abc = getFree();
+                                        if(!OldPaste) {
+                                            BOTS[abc].utils.bucket.canSpend(0);
+                                            if(BOTS[abc].utils.bucket.allowance <= 1) await sleep(0);  
+                                        }
+                                        BOTS[abc].world.setPixel(chunkx + x, chunky + y, color);
+                                    }
+                                }
+                            } else if(pattern == patterns.tb) {
+                                for (let y = 0; y < h; y++) {
+                                    for (let x = 0; x < w; x++) {
+                                        let abc = getFree();
+                                        if(!OldPaste) {
+                                            BOTS[abc].utils.bucket.canSpend(0);
+                                            if(BOTS[abc].utils.bucket.allowance <= 1) await sleep(0);  
+                                        }
+                                        BOTS[abc].world.setPixel(chunkx + x, chunky + y, color);
+                                    }
+                                }
+                            } else if(pattern == patterns.rand) {
+                                for (let x = 0; x < w*3; x++) {
+                                    for (let y = 0; y < h*3; y++) {
+                                        let abc = getFree();
+                                        if(!OldPaste) {
+                                            BOTS[abc].utils.bucket.canSpend(0);
+                                            if(BOTS[abc].utils.bucket.allowance <= 1) await sleep(0);  
+                                        }
+                                        BOTS[abc].world.setPixel(chunkx + Math.floor(Math.random() * w), chunky + Math.floor(Math.random() * h), color);
+                                    }
+                                }
                             }
                         }
+
+                        drawPattern(pattern)
                         for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = false;
                     } else {
                         tool.extra.start = null;
@@ -1482,6 +1711,14 @@ button[id^="tool-"]:not(.selected) > div {
                     }
                 });
             }));
+            OWOP.tools.addToolObject(new OWOP.tools.class('Bot Text', OWOP.cursors.write, OWOP.fx.player.RECT_SELECT_ALIGNED(1), false, function (tool) {
+                tool.setEvent('mousedown', function (mouse, event) {
+                    if (mouse.buttons == 1 || mouse.buttons == 2) {
+                        var text = prompt('Text to draw:');
+                        writeText(text, mouse.tileX, mouse.tileY);
+                    };
+                });
+            }));
             OWOP.tool.addToolObject(new OWOP.tool.class("Bot Fill", OWOP.cursors.fill, OWOP.fx.player.NONE, OWOP.RANK.USER, e => {
                 e.extra.tickAmount = 30;
                 let t = [],
@@ -1550,11 +1787,11 @@ button[id^="tool-"]:not(.selected) > div {
 
             }));
             let aboab;
-            OWOP.tool.addToolObject(new OWOP.tool.class("Bot Paste Asset", OWOP.cursors.paste, OWOP.fx.player.RECT_SELECT_ALIGNED(1), OWOP.RANK.USER, tool => {
+            OWOP.tools.addToolObject(new OWOP.tools.class("Bot Paste Asset", OWOP.cursors.paste, OWOP.fx.player.RECT_SELECT_ALIGNED(1), false, tool => {
                 tool.setEvent("mousedown mousemove", async e => {
-                    if(e.buttons === 1) {
-                        if(!selectedAsset) OWOP.chat.local("No asset selected!");
-                        if(typeof selectedAsset === "string") {
+                    if (e.buttons === 1) {
+                        if (!selectedAsset) OWOP.chat.local("No asset selected!");
+                        if (typeof selectedAsset === "string") {
                             // convert
                             let cnv = document.createElement("canvas");
                             let ctx = cnv.getContext('2d');
@@ -1569,10 +1806,106 @@ button[id^="tool-"]:not(.selected) > div {
                             img.src = selectedAsset;
                             return OWOP.chat.local("Image is ready.");
                         };
+                        let cC0 = 0;
+                        let cC1 = 0;
+                        let cC2 = 0;
+                        let xX = 0;
+                        let yY = 0;
+                        let x_ = 0;
+                        let y_ = 0;
                         let I = 0;
-                        let x = !Pixelization ? OWOP.mouse.tileX : Math.floor(OWOP.mouse.tileX/16)*16,
-                            y = !Pixelization ? OWOP.mouse.tileY : Math.floor(OWOP.mouse.tileY/16)*16;
-                        async function pastePick() {
+                        let x = !Pixelization ? OWOP.mouse.tileX : Math.floor(OWOP.mouse.tileX / 16) * 16,
+                            y = !Pixelization ? OWOP.mouse.tileY : Math.floor(OWOP.mouse.tileY / 16) * 16;
+                        if(imgpattern === imgpatterns.default) {
+                            async function pastePick() {
+                                let I = 0;
+                                let x = !Pixelization ? OWOP.mouse.tileX : Math.floor(OWOP.mouse.tileX/16)*16,
+                                    y = !Pixelization ? OWOP.mouse.tileY : Math.floor(OWOP.mouse.tileY/16)*16;
+                                for(let Y = 0; Y < selectedAsset.height; Y++){
+                                    for(let X = 0; X < selectedAsset.width; X++) {
+                                        let abc = getFree();
+                                        if(!OldPaste) {
+                                            BOTS[abc].utils.bucket.canSpend(0);
+                                            if(BOTS[abc].utils.bucket.allowance <= 1) await sleep(0);
+                                        }
+                                        BOTS[abc].world.setPixel(x+X, y+Y, [selectedAsset.data[I++], selectedAsset.data[I++], selectedAsset.data[I++]]);
+                                        I++;
+                                    }
+                                }
+                            }
+                            pastePick();
+                        } else if(imgpattern === imgpatterns.grid) {
+                            async function pastePick() {
+                                if (!stop121) {
+                                    for (let Y = 0; Y < selectedAsset.height; Y += 2) {
+                                        for (let X = 0; X < selectedAsset.width; X++) {
+
+                                            //    for(let Y = 0; Y > selectedAsset.height; Y++){
+                                            //for(let X = 0; X > selectedAsset.width; X++) {
+                                            let abc = getFree();
+                                            if (!OldPaste) {
+                                                BOTS[abc].utils.bucket.canSpend(0);
+                                                if (BOTS[abc].utils.bucket.allowance <= 49) await sleep(0);
+                                            }
+                                            x_ = X;
+                                            //xX = x_;
+                                            y_ = Y;
+                                            //yY = y_;
+                                            BOTS[abc].world.setPixel(x + x_, y + y_, pixColor(aboab, x_, y_));
+                                        }
+                                    }
+                                    for (let Y = 0; Y < selectedAsset.height; Y++) {
+                                        for (let X = 0; X < selectedAsset.width; X += 2) {
+
+                                            //    for(let Y = 0; Y > selectedAsset.height; Y++){
+                                            //for(let X = 0; X > selectedAsset.width; X++) {
+                                            let abc = getFree();
+                                            if (!OldPaste) {
+                                                BOTS[abc].utils.bucket.canSpend(0);
+                                                if (BOTS[abc].utils.bucket.allowance <= 49) await sleep(0);
+                                            }
+                                            x_ = X;
+                                            //xX = x_;
+                                            y_ = Y;
+                                            //yY = y_;
+                                            BOTS[abc].world.setPixel(x + x_, y + y_, pixColor(aboab, x_, y_));
+                                        }
+                                    }
+                                    for (let Y = 0; Y < selectedAsset.height; Y++) {
+                                        for (let X = 0; X < selectedAsset.width; X++) {
+
+                                            //    for(let Y = 0; Y > selectedAsset.height; Y++){
+                                            //for(let X = 0; X > selectedAsset.width; X++) {
+                                            let abc = getFree();
+                                            if (!OldPaste) {
+                                                BOTS[abc].utils.bucket.canSpend(0);
+                                                if (BOTS[abc].utils.bucket.allowance <= 49) await sleep(0);
+                                            }
+                                            x_ = X;
+                                            //xX = x_;
+                                            y_ = Y;
+                                            //yY = y_;
+                                            BOTS[abc].world.setPixel(x + x_, y + y_, pixColor(aboab, x_, y_));
+                                        }
+                                    }
+                                }
+                            }
+                            for (let Y = 0; Y < selectedAsset.height; Y++) {
+                                for (let X = 0; X < selectedAsset.width; X++) {
+                                    if ([OWOP.world.getPixel(x + X, y + Y)[0], OWOP.world.getPixel(x + X, y + Y)[1], OWOP.world.getPixel(x + X, y + Y)[2]] != pixColor(aboab, X, Y)) {
+                                        await pastePick();
+                                        await sleep(1000);
+                                        X = 0;
+                                        Y = 0;
+                                        if (stop121) {
+                                            Y = selectedAsset.height;
+                                            X = selectedAsset.width;
+                                        }
+                                    }
+                                }
+                            } //
+                        } else if(imgpattern === imgpatterns.leftup) {
+                            async function pastePick() {
                                 for (let X = 0; X < selectedAsset.width; X++) {
                                     for (let Y = 0; Y < selectedAsset.height; Y++) {
                                         if (stop121) {
@@ -1599,10 +1932,146 @@ button[id^="tool-"]:not(.selected) > div {
                                 //}
                             }
                             pastePick();
-                    }
-                })
+                        } else if (imgpattern == imgpatterns.square) {
+                            async function pastePick() {
+                                let x_2 = 1;
+                                let y_2 = selectedAsset.height - 1;
+                                let y_1;
+                                let x_1 = selectedAsset.width - 1;
+                                for (y_ = 0; y_ < selectedAsset.height; y_++) {
+                                    for (x_ = 0; x_ < selectedAsset.width; x_++) {
+                                        if (stop121) {
+                                            x_ = selectedAsset.height;
+                                            y_ = selectedAsset.width;
+                                            y_1 = selectedAsset.height;
+                                        }
+                                        let abc = getFree();
+                                        if (!OldPaste) {
+                                            BOTS[abc].utils.bucket.canSpend(0);
+                                            if (BOTS[abc].utils.bucket.allowance <= 1) {
+                                                await sleep(0);
+                                                x_--
+                                            } else {
+                                                BOTS[abc].world.setPixel(x + x_, y + y_, pixColor(aboab, x_, y_));
+                                            }
+                                        }
+                                    }
+                                    y_1 = y_;
+                                    if (x_1 > 0) {
+                                        for (y_ = 0; y_ < selectedAsset.height; y_++) {
+                                            let abc = getFree();
+                                            if (!OldPaste) {
+                                                BOTS[abc].utils.bucket.canSpend(0);
+                                                if (BOTS[abc].utils.bucket.allowance <= 1) {
+                                                    await sleep(0);
+                                                    y_--
+                                                } else {
+                                                    BOTS[abc].world.setPixel(x + x_1, y + y_, pixColor(aboab, x_1, y_));
+                                                }
+                                            }
+                                        }
+                                        x_1--
+                                    }
+                                    y_ = y_1;
+                                    if (y_2 != 0) {
+                                        for (let x_ = selectedAsset.width - 1; x_ > -1; x_--) {
+                                            if (!stop121) {
+                                                let abc = getFree();
+                                                if (!OldPaste) {
+                                                    BOTS[abc].utils.bucket.canSpend(0);
+                                                    if (BOTS[abc].utils.bucket.allowance <= 1) {
+                                                        await sleep(0);
+                                                        x_++
+                                                    } else {
+                                                        BOTS[abc].world.setPixel(x + x_, y + y_2, pixColor(aboab, x_, y_2));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    y_2--
+                                    y_1 = y_;
+                                    if (x_2 < selectedAsset.width) {
+                                        for (y_ = selectedAsset.height - 1; y_ > -1; y_--) {
+                                            let abc = getFree();
+                                            if (!OldPaste) {
+                                                BOTS[abc].utils.bucket.canSpend(0);
+                                                if (BOTS[abc].utils.bucket.allowance <= 1) {
+                                                    await sleep(0);
+                                                    y_++
+                                                } else {
+                                                    BOTS[abc].world.setPixel(x + x_2, y + y_, pixColor(aboab, x_2, y_));
+                                                }
+                                            }
+                                        }
+                                        x_2++
+                                    }
+                                    y_ = y_1;
+                                }
+                            };
+                            pastePick();
+                        };
+                    };
+                });
             }));
     });
+    var chars = [
+        [0b1111111, 0b1000001, 0b1010111, 0b1010100, 0b1010111, 0b1000001, 0b1111111] /*A*/ ,
+        [0b1111111, 0b1000001, 0b1010101, 0b1010101, 0b1010101, 0b1001001, 0b1111111] /*B*/ ,
+        [0b1111111, 0b1000001, 0b1011101, 0b1010101, 0b1010101, 0b1010101, 0b1110111] /*C*/ ,
+        [0b1111111, 0b1000001, 0b1011101, 0b1010101, 0b1011101, 0b1100011, 0b0111110] /*D*/ ,
+        [0b1111111, 0b1000001, 0b1010101, 0b1010101, 0b1010101, 0b1011101, 0b1110111] /*E*/ ,
+        [0b1111111, 0b1000001, 0b1010111, 0b1010100, 0b1010100, 0b1011100, 0b1110000] /*F*/ ,
+        [0b1111111, 0b1000001, 0b1011101, 0b1010101, 0b1010101, 0b1010001, 0b1111111] /*G*/ ,
+        [0b1111111, 0b1000001, 0b1110111, 0b0010100, 0b1110111, 0b1000001, 0b1111111] /*H*/ ,
+        [0b1111111, 0b1000001, 0b1111111] /*I*/ ,
+        [0b1111111, 0b1010001, 0b1011101, 0b1010101, 0b1011101, 0b1000001, 0b1111111] /*J*/ ,
+        [0b1111111, 0b1000001, 0b1110111, 0b0110110, 0b1101011, 0b1011101, 0b1110111] /*K*/ ,
+        [0b1111111, 0b1000001, 0b1111101, 0b0000101, 0b0000101, 0b0000101, 0b0000111] /*L*/ ,
+        [0b1111111, 0b1000001, 0b1011111, 0b1000001, 0b1011111, 0b1000001, 0b1111111] /*M*/ ,
+        [0b1111111, 0b1000001, 0b1011111, 0b1000001, 0b1111101, 0b1000001, 0b1111111] /*N*/ ,
+        [0b1111111, 0b1000001, 0b1011101, 0b1010101, 0b1011101, 0b1000001, 0b1111111] /*O*/ ,
+        [0b1111111, 0b1000001, 0b1010111, 0b1010100, 0b1010100, 0b1000100, 0b1111100] /*P*/ ,
+        [0b1111111, 0b1000001, 0b1011101, 0b1010101, 0b1011101, 0b1000011, 0b1111111] /*Q*/ ,
+        [0b1111111, 0b1000001, 0b1010111, 0b1010100, 0b1010111, 0b1001001, 0b1111111] /*R*/ ,
+        [0b1111111, 0b1000101, 0b1010101, 0b1010101, 0b1010101, 0b1010001, 0b1111111] /*S*/ ,
+        [0b1110000, 0b1010000, 0b1011111, 0b1000001, 0b1011111, 0b1010000, 0b1110000] /*T*/ ,
+        [0b1111111, 0b1000001, 0b1111101, 0b0000101, 0b1111101, 0b1000001, 0b1111111] /*U*/ ,
+        [0b1111100, 0b1000110, 0b1111011, 0b0001101, 0b1111011, 0b1000110, 0b1111100] /*V*/ ,
+        [0b1111110, 0b1000011, 0b1111101, 0b0100011, 0b1111101, 0b1000011, 0b1111110] /*W*/ ,
+        [0b1110111, 0b1011101, 0b1101011, 0b0110110, 0b1101011, 0b1011101, 0b1110111] /*X*/ ,
+        [0b1111000, 0b1001100, 0b1110111, 0b0011001, 0b1110111, 0b1001100, 0b1111000] /*Y*/ ,
+        [0b1111111, 0b1010001, 0b1010101, 0b1010101, 0b1010101, 0b1000101, 0b1111111] /*Z*/ ,
+    ];  
+    var NUMS = [
+        [0b11111, 0b10001, 0b11111] /*0*/ ,
+        [0b01000, 0b11111] /*1*/ ,
+        [0b10111, 0b10101, 0b11101] /*2*/ ,
+        [0b10101, 0b10101, 0b11111] /*3*/ ,
+        [0b11100, 0b00100, 0b11111] /*4*/ ,
+        [0b11101, 0b10101, 0b10111] /*5*/ ,
+        [0b11111, 0b10101, 0b10111] /*6*/ ,
+        [0b10000, 0b10000, 0b11111] /*7*/ ,
+        [0b11111, 0b10101, 0b11111] /*8*/ ,
+        [0b11101, 0b10101, 0b11111] /*9*/
+    ];  
+    var symbols = {
+        "33": [0b11101] /*!*/ ,
+        "34": [0b11000, 0b00000, 0b11000] /*"*/ ,
+        "35": [0b01010, 0b11111, 0b01010, 0b11111, 0b01010] /*#*/ ,
+        "39": [0b11000] /*'*/ ,
+        "40": [0b01110, 0b10001] /*(*/ ,
+        "41": [0b10001, 0b01110] /*)*/ ,
+        "43": [0b00100, 0b01110, 0b00100] /*+*/ ,
+        "45": [0b00100, 0b00100, 0b00100] /*-*/ ,
+        "46": [0b00001] /*.*/ ,
+        "47": [0b00001, 0b00110, 0b11000] /*/*/ ,
+        "58": [0b01010] /*:*/ ,
+        "61": [0b01010, 0b01010, 0b01010] /*=*/ ,
+        "63": [0b10101, 0b01000] /*?*/ ,
+        "91": [0b11111, 0b10001] /*[*/ ,
+        "93": [0b10001, 0b11111] /*]*/
+    };  
 };
 
 function pixColor(img, X, Y, RGB) {

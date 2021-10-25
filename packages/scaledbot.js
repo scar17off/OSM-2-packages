@@ -516,6 +516,8 @@ Connections: <span id="scaled-proxy-proxyconns-${Proxy}"></span>
             servers.insertAdjacentHTML("beforeend", ProxyDiv);
             const WSCheck = new WebSocket(`wss://ws-proxy${Proxy}.glitch.me/?ws=WS-STATUS`);
             WSCheck.onopen = () => {
+                onlineproxy += 1;
+                checkingproxy -= 1;
                 document.getElementById(`scaled-proxy-proxyjoin-${Proxy}`).onclick = () => { proxyJoin(Proxy); };
                 document.getElementById(`scaled-proxy-proxystatus-${Proxy}`).innerText = "+";
                 document.getElementById(`scaled-proxy-proxystatus-${Proxy}`).style.color = "lightgreen";
@@ -526,11 +528,18 @@ Connections: <span id="scaled-proxy-proxyconns-${Proxy}"></span>
                 WSCheck.close();
             };
             WSCheck.onerror = () => {
+                onlineproxy -= 1;
+                checkingproxy -= 1;
+                offlineproxy += 1;
                 document.getElementById(`scaled-proxy-proxystatus-${Proxy}`).innerText = "-";
                 document.getElementById(`scaled-proxy-proxystatus-${Proxy}`).style.color = "red";
             };
         }
     };
+    let allproxy = ProxyPasswords.length;
+    let checkingproxy = allproxy;
+    let offlineproxy = 0;
+    let onlineproxy = 0;
     const renderCaptcha = () => new Promise(resolve => {
         if(rendercaptchaen = true){
             OWOP.windowSys.addWindow(new OWOP.windowSys.class.window(`Captcha`, {
@@ -1094,7 +1103,12 @@ button[id^="scaled"] {
                 <button id="scaled-proxies-menu-refresh">Refresh</button>
                 <button id="scaled-proxies-menu-delall">Delete all</button>
                 <button id="scaled-proxies-menu-conall">Connect all</button>
-                <label>Count: ${ProxyPasswords.length}</label></div>
+                <br>
+                <label>Count: ${allproxy}</label>
+                <label id="scaled-proxies-menu-onlineproxy">Online proxies: ${onlineproxy}</label>
+                <label id="scaled-proxies-menu-offlineproxy">Offline proxies: ${offlineproxy}</label>
+                <label id="scaled-proxies-menu-checkingproxy">Checking proxy: ${checkingproxy}</label>
+                </div>
             </fieldset>
         </form>
         <hr>
@@ -1134,6 +1148,12 @@ button[id^="scaled"] {
         cont.style.maxHeight = height;
         cont.style.width = width;
     }).move(75, 75));
+
+    setInterval(() => {
+        document.getElementById("scaled-proxies-menu-onlineproxy").innerText = `Online proxies: ${onlineproxy}`;
+        document.getElementById("scaled-proxies-menu-offlineproxy").innerText = `Offline proxies: ${offlineproxy}`;
+        document.getElementById("scaled-proxies-menu-checkingproxy").innerText = `Checking proxies: ${checkingproxy}`;        
+    }, 25);
 
     document.getElementById("scaled-main-menu-disconnect").onclick = async () => {
         for (let i in BOTS) BOTS[i].ws.close();

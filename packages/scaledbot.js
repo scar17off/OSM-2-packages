@@ -467,9 +467,9 @@ var OJS = class extends EventEmitter {
 <div id="scaled-proxy-${Proxy}">
 <span>${Proxy}</span>
 <br>
-Status: <span id="scaled-proxy-proxystatus-${Proxy}">-</span>
+Status: <span id="scaled-proxy-proxystatus-${Proxy}"></span>
 <br>
-Connections: <span id="scaled-proxy-proxyconns-${Proxy}"> Wait...</span>
+Connections: <span id="scaled-proxy-proxyconns-${Proxy}"></span>
 <br>
 <button id="scaled-proxy-proxyjoin-${Proxy}">Connect</button>
 <br>

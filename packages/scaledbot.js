@@ -467,7 +467,7 @@ var OJS = class extends EventEmitter {
 <div id="scaled-proxy-${Proxy}">
 <span>${Proxy}</span>
 <br>
-Status: <span id="scaled-proxy-proxystatus-${Proxy}"></span>
+Status: <span id="scaled-proxy-proxystatus-${Proxy}" style="color: yellow;">=</span>
 <br>
 Connections: <span id="scaled-proxy-proxyconns-${Proxy}"></span>
 <br>
@@ -1182,13 +1182,29 @@ button[id^="tool-"]:not(.selected) > div {
                             let armor = pix * pix;
                             //console.log(armor)
                             if (BOTS.length === 0) return OWOP.chat.local("No bots connected!");
-                            for (let x = 0; x < pix; x++) {
-                                for (let y = 0; y < pix; y++) {
-                                    const abc = getFree();
-                                    if(BOTS[abc].utils.bucket.allowance === 0) await sleep(42);
-                                    BOTS[abc].world.setPixel(chunkx + x, chunky + y, color);
-                                };
+                            async function pastePick() {
+                                for (let x = 0; x < pix; x++) {
+                                    for (let y = 0; y < pix; y++) {
+                                        //    for(let Y = 0; Y > selectedAsset.height; Y++){
+                                        //for(let X = 0; X > selectedAsset.width; X++) {
+                                        let i = getFree();
+                                        if (!OldPaste) {
+                                            BOTS[i].utils.bucket.canSpend(0);
+                                            if (BOTS[i].utils.bucket.allowance <= 1) {
+                                                await sleep(0);
+                                                Y--
+                                            } else {
+                                                BOTS[i].world.setPixel(chunkx + x, chunky + y, color);
+                                            }
+                                        } else {
+                                            BOTS[i].world.setPixel(chunkx + x, chunky + y, color);
+                                        }
+                                    }
+                                }
+                                //    }
+                                //}
                             }
+                            pastePick();
                             for (let i = 0; i < BOTS.length; i++) BOTS[i].options.busy = false;
                         }
                     }
@@ -1228,8 +1244,7 @@ button[id^="tool-"]:not(.selected) > div {
                         ctx.font = "16px sans-serif";
                         let o = 0;
                         for(let i in BOTS) o += BOTS[i].utils.bucket.allowance;
-                        let botchunks = (o/256).toFixed(2);
-                        let perc = (o/256).toFixed(1);
+                        let perc = 2;
                         if(perc > 100) perc = 100;
                         let txt = (!tool.extra.clicking ? "Right click to start pixeling." : "") + '(' + Math.abs(w) + 'x' + Math.abs(h) + ` | ${perc}%)`;
                         let txtx = window.innerWidth >> 1;

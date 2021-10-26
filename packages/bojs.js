@@ -6,9 +6,7 @@ let OWOPUnlocked = (() => {
 var BOJS = {};
 
 append("https://raw.githack.com/Olical/EventEmitter/master/EventEmitter.min.js", () => {
-            if (OWOPUnlocked) {
-                EventEmitter = OWOP.require("events");
-            } else if (isBrowser) {
+            if (isBrowser) {
                 ! function(e) {
                     "use strict";
 

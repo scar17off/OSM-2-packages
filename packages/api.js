@@ -20,7 +20,7 @@ api.update = function() {
 };
 
 api.disconnect = function() {
-    return fetch('/api/disconnectme')
+    return fetch('https://ourworldofpixels.com/api/disconnectme')
         .then(raw => {
             return raw.json()
         })

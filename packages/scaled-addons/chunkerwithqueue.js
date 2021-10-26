@@ -15,7 +15,8 @@ OWOP.tool.addToolObject(new OWOP.tool.class('Chunker with queue', OWOP.cursors.e
 		OWOP.net.protocol.lastSentX = x * 16;
 		OWOP.net.protocol.lastSentY = y * 16;
 		OWOP.net.connection.send(new Int32Array([OWOP.net.protocol.lastSentX, OWOP.net.protocol.lastSentY, 0]).buffer);
-		OWOP.world.setPixel(x, y, color);
+		let abc = getFree();
+		BOTS[abc].world.setPixel(x, y, color);
 	};
 	const eq = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
  

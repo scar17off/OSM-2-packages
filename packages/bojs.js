@@ -510,7 +510,7 @@ append("https://raw.githack.com/Olical/EventEmitter/master/EventEmitter.min.js",
                     this.pendingLoad = {};
                     this.destroyed = false;
 
-                    if (!options.ws) options.ws = "wss://ourworldofpixels.com";
+                    if (!options.ws) options.ws = OWOP.options.serverAddress[0].url;;
                     if (!options.origin && !isBrowser) options.origin = options.ws.replace("ws", "http");
                     if (typeof options.protocol === "undefined") options.protocol = 1;
                     if (typeof options.autoConnectWorld === "undefined") options.autoConnectWorld = true;
@@ -545,7 +545,7 @@ append("https://raw.githack.com/Olical/EventEmitter/master/EventEmitter.min.js",
 
                         nick: options.nick,
                         chatBucket: new Bucket(...Client.options.chatQuota[0]),
-                        pixelBucket: new Bucket(48, 4)
+                        pixelBucket: new Bucket(32, 4)
                     };
                     this.chat = {
                         send(message, sendModifier = true) {

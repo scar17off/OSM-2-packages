@@ -1149,4 +1149,4 @@ append("https://raw.githack.com/Olical/EventEmitter/master/EventEmitter.min.js",
                     canvasUtils
                 }
             }
-        }
+        });

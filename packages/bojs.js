@@ -3,10 +3,12 @@ let OWOPUnlocked = (() => {
     if (typeof OWOP === "undefined") return false;
     return typeof OWOP.require !== "undefined";
 })();
-var BOJS = {};
+let BOJS = {};
 
 append("https://raw.githack.com/Olical/EventEmitter/master/EventEmitter.min.js", () => {
-            if (isBrowser) {
+            if (OWOPUnlocked) {
+                EventEmitter = OWOP.require("events");
+            } else if (isBrowser) {
                 ! function(e) {
                     "use strict";
 
@@ -1130,7 +1132,7 @@ append("https://raw.githack.com/Olical/EventEmitter/master/EventEmitter.min.js",
             }
 
             if (isBrowser) {
-                var BOJS = { // browser
+                BOJS = { // browser
                     Client,
                     ChunkSystem,
                     WeirdDataView,

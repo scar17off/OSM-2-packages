@@ -18,11 +18,6 @@ OWOP.tool.addToolObject(new OWOP.tool.class('Chess chunker', OWOP.cursors.erase,
 				var shiny = OWOP.player.selectedColor;
 				var outline = OWOP.player.selectedColor;
 				var shade = OWOP.player.selectedColor;
-
-				heartcolors = [
-					[outline[0], outline[1], outline[2]], secl, [shade[0], shade[1], shade[2]],
-					[shiny[0], shiny[1], shiny[2]]
-				];
 				//outline, main, shade, shine
 				let i = getFree();
 				chunkx = Math.floor(OWOP.mouse.tileX / 16) * 16

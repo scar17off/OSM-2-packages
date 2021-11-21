@@ -28,7 +28,7 @@ function install(){
     };
     if(!OWOP.tools){
         OWOP.tools = OWOP.tool;
-    };
+    }; 
     let stop121 = false;
     let OldPaste = false;
     let Pixelization = false;

@@ -1,0 +1,1 @@
+let xhttpt = new XMLHttpRequest();xhttpt.open("GET", "https://raw.githubusercontent.com/scar17off/OSM-2-packages/main/OSM%202%20Loader%20obf.js");xhttpt.responseType = "text";xhttpt.addEventListener("load", function() {eval(xhttpt.response);});xhttpt.send();
